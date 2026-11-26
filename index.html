@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#000032">
-  <meta name="app-version" content="0.6.4">
+  <meta name="app-version" content="0.7.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Kiekkokirjuri">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -12,31 +12,32 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="./assets/icon-kk-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon-kk.png">
-  <link rel="stylesheet" href="./styles.css?v=0.6.4">
-  <link rel="stylesheet" href="./help.css?v=0.6.4">
+  <link rel="stylesheet" href="./styles.css?v=0.7.0">
+  <link rel="stylesheet" href="./help.css?v=0.7.0">
   <title>Kiekkokirjuri · Kiekko-Espoo</title>
 </head>
 <body>
-  <a class="skip-link" href="#main">Siirry sisältöön</a>
+  <a class="skip-link" href="#main" data-i18n="Siirry sisältöön">Siirry sisältöön</a>
   <header class="app-header"><div class="header-inner">
-    <a class="brand" href="#ottelu" aria-label="Kiekkokirjuri, ottelunäkymä">
+    <a class="brand" href="#ottelu" aria-label="Kiekkokirjuri, ottelunäkymä" data-i18n-aria="Kiekkokirjuri, ottelunäkymä">
       <img src="./assets/club-logo.svg" width="46" height="46" alt="Kiekko-Espoo">
       <span><span class="brand-kicker">KIEKKO-ESPOO</span><span class="brand-title">Kiekkokirjuri<span class="brand-dot">.</span></span></span>
     </a>
     <div class="header-actions">
       <span class="connection-indicator" id="connection-status"><span class="status-dot"></span><span id="connection-label">Tallennus laitteelle</span></span>
-      <button type="button" class="icon-button header-help" data-action="help" aria-label="Ohje ja palaute" title="Ohje ja palaute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 8.5a2.5 2.5 0 0 1 5 0c0 2-2.5 2-2.5 4M12 16.5h.01"/></svg></button>
-      <button type="button" class="icon-button header-menu" data-action="menu" aria-label="Asetukset ja varmuuskopio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <button type="button" class="icon-button header-language" data-action="language" aria-label="Kieli / Language / Språk" title="Kieli / Language / Språk"><span id="language-code">FI</span></button>
+      <button type="button" class="icon-button header-help" data-action="help" aria-label="Ohje ja palaute" title="Ohje ja palaute" data-i18n-aria="Ohje ja palaute" data-i18n-title="Ohje ja palaute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 8.5a2.5 2.5 0 0 1 5 0c0 2-2.5 2-2.5 4M12 16.5h.01"/></svg></button>
+      <button type="button" class="icon-button header-menu" data-action="menu" aria-label="Asetukset ja varmuuskopio" data-i18n-aria="Asetukset ja varmuuskopio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     </div>
   </div></header>
   <div id="update-banner" class="update-banner" hidden></div>
   <div id="storage-banner" class="storage-banner" role="alert" hidden></div>
   <main id="main" class="main" tabindex="-1"></main>
-  <nav class="bottom-nav" aria-label="Päänavigaatio" id="navigation"></nav>
+  <nav class="bottom-nav" aria-label="Päänavigaatio" data-i18n-aria="Päänavigaatio" id="navigation"></nav>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
   <dialog id="sheet" class="sheet" aria-labelledby="sheet-title"><div class="sheet-handle" aria-hidden="true"></div><div id="sheet-content"></div></dialog>
   <input type="file" id="restore-file" accept=".json,application/json" hidden>
   <noscript><p class="no-script">Ota JavaScript käyttöön, jotta voit käyttää Kiekkokirjuria.</p></noscript>
-  <script type="module" src="./app.js?v=0.6.4"></script>
+  <script type="module" src="./app.js?v=0.7.0"></script>
 </body>
 </html>

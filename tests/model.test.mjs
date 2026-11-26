@@ -1,3 +1,5 @@
+import { setLanguage } from '../i18n.js?v=0.7.0';
+import { domainText } from '../domain-messages.js?v=0.7.0';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -213,7 +215,7 @@ test('snapshot and next period are pure and preserve events and archive', () => 
   next.events[0].n = '9';
   next.archive[0].home = 'Muutos';
   assert.deepEqual(current, original);
-  assert.equal(VERSION, '0.6.4');
+  assert.equal(VERSION, '0.7.0');
 });
 
 test('new event validation enforces the three-event model and valid unique assistants', () => {
@@ -256,4 +258,39 @@ test('malformed backups fail atomically rather than silently dropping records', 
     assert.throws(() => normalizeState(raw), Error);
     assert.deepEqual(raw, before);
   }
+});
+
+test('validation errors follow the selected language without changing match or backup data', () => {
+  const original = createGame();
+  original.roster = [{ n: '0', name: 'Mål & Goal', team: 'home' }];
+  original.events = [event('Jäähy', 'home', {
+    id: 'penalty', n: '0', minutes: 2, reason: 'Kampitus', penaltyType: 'minor',
+    penaltyLabel: '2 min · pieni rangaistus', detail: 'Säilytä tämä teksti.'
+  })];
+  const before = structuredClone(original);
+  try {
+    for (const [language, numberError, periodError] of [
+      ['en', /player number/, /Period is not a valid number/],
+      ['sv', /Spelarnumret/, /Period är inte ett giltigt tal/],
+      ['fi', /Pelaajan numeron/, /Erä ei ole kelvollinen luku/]
+    ]) {
+      setLanguage(language);
+      assert.throws(() => normalizeNumber(100), numberError);
+      assert.throws(() => normalizeState({ ...original, period: 'invalid' }), periodError);
+      assert.deepEqual(normalizeState(original), before);
+      assert.deepEqual(score(original), { home: 0, away: 0 });
+      assert.equal(teamStats(original).home.penaltyMinutes, 2);
+      assert.equal(validateEvent(original.events[0], original).type, 'Jäähy');
+    }
+    assert.deepEqual(original, before);
+  } finally { setLanguage('fi'); }
+});
+
+test('known hockey labels translate while custom penalty descriptions are preserved', () => {
+  assert.equal(domainText('Jäähy', {}, 'en'), 'Penalty');
+  assert.equal(domainText('Torjunta', {}, 'sv'), 'Räddning');
+  assert.equal(domainText('2 min · joukkuerangaistus', {}, 'sv'), '2 min · lagstraff');
+  assert.equal(domainText('Kampitus', {}, 'en'), 'Tripping');
+  const custom = 'Oma rangaistus <erikoisnimi> & lisätieto';
+  for (const language of ['fi', 'en', 'sv']) assert.equal(domainText(custom, {}, language), custom);
 });

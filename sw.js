@@ -1,5 +1,5 @@
 /* Kiekkokirjuri: an immutable, complete offline shell for each release. */
-const RELEASE = '0.6.4';
+const RELEASE = '0.7.0';
 const SCOPE = new URL(self.registration.scope);
 const CACHE_PREFIX = `kiekkokirjuri:${SCOPE.pathname}:`;
 const CACHE_NAME = `${CACHE_PREFIX}${RELEASE}`;
@@ -16,6 +16,13 @@ const ASSETS = [
   `./pwa.js?v=${RELEASE}`,
   `./help.js?v=${RELEASE}`,
   `./feedback.js?v=${RELEASE}`,
+  `./i18n.js?v=${RELEASE}`,
+  `./ui-messages.js?v=${RELEASE}`,
+  `./domain-messages.js?v=${RELEASE}`,
+  `./model-messages.js?v=${RELEASE}`,
+  `./pwa-messages.js?v=${RELEASE}`,
+  `./help-messages.js?v=${RELEASE}`,
+  `./report-messages.js?v=${RELEASE}`,
   './manifest.json',
   './assets/club-logo.svg',
   './assets/club-logo.png',
@@ -24,7 +31,7 @@ const ASSETS = [
   './assets/apple-touch-icon-kk.png',
 ].map(path => new URL(path, SCOPE).href);
 const ASSET_URLS = new Set(ASSETS);
-const MODULE_PATHS = new Set(['app.js', 'model.js', 'reports.js', 'pwa.js', 'help.js', 'feedback.js', 'styles.css', 'help.css']
+const MODULE_PATHS = new Set(['app.js', 'model.js', 'reports.js', 'pwa.js', 'help.js', 'feedback.js', 'i18n.js', 'ui-messages.js', 'domain-messages.js', 'model-messages.js', 'pwa-messages.js', 'help-messages.js', 'report-messages.js', 'styles.css', 'help.css']
   .map(path => new URL(path, SCOPE).pathname));
 
 function belongsToScope(url) {

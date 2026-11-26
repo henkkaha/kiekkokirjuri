@@ -1,4 +1,12 @@
-import { elapsed, formatTime, score, teamStats, playerStats, periodStats } from './model.js?v=0.6.4';
+import { elapsed, formatTime, score, teamStats, playerStats, periodStats } from './model.js?v=0.7.0';
+
+import { createTranslator, getLanguage, getLocale } from './i18n.js?v=0.7.0';
+import { domainText } from './domain-messages.js?v=0.7.0';
+import { REPORT_MESSAGES } from './report-messages.js?v=0.7.0';
+export { REPORT_MESSAGES };
+
+const translate = createTranslator(REPORT_MESSAGES);
+const translator = language => (source, values = {}) => translate(source, values, language);
 
 const NAVY = '#000032';
 const ROYAL = '#003DA5';
@@ -8,22 +16,23 @@ const PALE = '#BFCBE5';
 const FONT = 'Arial, Helvetica, sans-serif';
 const TEAMS = ['home', 'away'];
 
-function teamName(game, team) {
-  return String(game[team] || (team === 'home' ? 'Kiekko-Espoo' : 'Vastustaja'));
+function teamName(game, team, language) {
+  const name = String(game[team] || (team === 'home' ? 'Kiekko-Espoo' : 'Vastustaja'));
+  return name === 'Vastustaja' ? domainText(name, {}, language) : name;
 }
 
-function playerName(game, team, number, unknown = 'Pelaaja kirjaamatta') {
+function playerName(game, team, number, unknown = '') {
   if (number === '' || number === undefined || number === null) return unknown;
   const n = String(Number(number));
   const player = (game.roster || []).find(entry => (entry.team || 'home') === team && String(Number(entry.n)) === n);
   return `#${n}${player?.name ? ` ${player.name}` : ''}`;
 }
 
-function gameDate(game) {
+function gameDate(game, language) {
   if (game.date === undefined || game.date === null || game.date === '') return '';
   const date = new Date(game.date);
   if (Number.isNaN(date.valueOf())) return '';
-  return new Intl.DateTimeFormat('fi-FI', { day: 'numeric', month: 'numeric', year: 'numeric', timeZone: 'Europe/Helsinki' }).format(date);
+  return new Intl.DateTimeFormat(getLocale(language), { day: 'numeric', month: 'numeric', year: 'numeric', timeZone: 'Europe/Helsinki' }).format(date);
 }
 
 function eventsWithScore(game) {
@@ -37,18 +46,19 @@ function eventsWithScore(game) {
     });
 }
 
-function eventLine(game, { event, home, away }) {
-  const parts = [`${event.period || 1}. erä ${formatTime(event.time)}`, String(event.type), teamName(game, event.team)];
+function eventLine(game, { event, home, away }, language) {
+  const t = translator(language);
+  const parts = [t('{period}. erä {time}', { period: event.period || 1, time: formatTime(event.time) }), domainText(String(event.type), {}, language), teamName(game, event.team, language)];
   if (event.type === 'Maali') {
-    parts.push(playerName(game, event.team, event.n, 'Maalintekijä kirjaamatta'));
-    if (event.assists?.length) parts.push(`Syöttäjät: ${event.assists.map(n => playerName(game, event.team, n)).join(', ')}`);
-    parts.push(`Tilanne ${home}–${away}`);
+    parts.push(playerName(game, event.team, event.n, t('Maalintekijä kirjaamatta')));
+    if (event.assists?.length) parts.push(t('Syöttäjät: {players}', { players: event.assists.map(n => playerName(game, event.team, n)).join(', ') }));
+    parts.push(t('Tilanne {home}–{away}', { home, away }));
   } else if (event.type === 'Torjunta') {
-    parts.push(playerName(game, event.team, event.n, 'Maalivahti kirjaamatta'));
+    parts.push(playerName(game, event.team, event.n, t('Maalivahti kirjaamatta')));
   } else if (event.type === 'Jäähy') {
     if (event.n !== '' && event.n !== undefined && event.n !== null) parts.push(playerName(game, event.team, event.n));
-    parts.push(event.penaltyLabel || `${event.minutes ?? 2} min`);
-    if (event.reason) parts.push(String(event.reason));
+    parts.push(event.penaltyLabel ? domainText(event.penaltyLabel, {}, language) : `${event.minutes ?? 2} min`);
+    if (event.reason) parts.push(domainText(String(event.reason), {}, language));
   } else if (event.n !== '' && event.n !== undefined && event.n !== null) {
     parts.push(playerName(game, event.team, event.n));
   }
@@ -56,46 +66,47 @@ function eventLine(game, { event, home, away }) {
   return parts.join(' · ');
 }
 
-/** Complete, plain-text export; it includes every saved event and every player row. */
-export function textReport(game) {
+/** Complete export in one captured language; saved names, notes and events stay unchanged. */
+export function textReport(game, language = getLanguage()) {
+  const t = translator(language);
   const totals = score(game);
   const stats = teamStats(game);
-  const date = gameDate(game);
+  const date = gameDate(game, language);
   const currentElapsed = elapsed(game);
   const length = Number(game.periodLength) || 1200;
   const lines = [
-    'KIEKKOKIRJURI · OTTELUKOOSTE',
-    `${teamName(game, 'home')} – ${teamName(game, 'away')}`,
-    `Tilanne: ${totals.home}–${totals.away}`
+    t('KIEKKOKIRJURI · OTTELUKOOSTE'),
+    `${teamName(game, 'home', language)} – ${teamName(game, 'away', language)}`,
+    t('Tilanne: {home}–{away}', totals)
   ];
-  if (date) lines.push(`Päivämäärä: ${date}`);
-  lines.push(`Erän pituus: ${formatTime(length)}`, `Erä: ${game.period || 1} · Kellossa: ${formatTime(length - currentElapsed)}`, '', 'ERÄT');
-  for (const period of periodStats(game)) lines.push(`${period.period}. erä: ${period.home}–${period.away}`);
-  lines.push('', 'JOUKKUETILASTOT');
+  if (date) lines.push(t('Päivämäärä: {date}', { date }));
+  lines.push(t('Erän pituus: {time}', { time: formatTime(length) }), t('Erä: {period} · Kellossa: {time}', { period: game.period || 1, time: formatTime(length - currentElapsed) }), '', t('ERÄT'));
+  for (const period of periodStats(game)) lines.push(t('{period}. erä: {home}–{away}', period));
+  lines.push('', t('JOUKKUETILASTOT'));
   for (const team of TEAMS) {
     const row = stats[team];
-    lines.push(`${teamName(game, team)} (${team === 'home' ? 'koti' : 'vieras'})`,
-      `Maalit: ${row.goals}`, `Laukaukset maalia kohti: ${row.shots}`,
-      `Torjunnat: ${row.saves}`, `Jäähyminuutit: ${row.penaltyMinutes}`, '');
+    lines.push(`${teamName(game, team, language)} (${t(team === 'home' ? 'koti' : 'vieras')})`,
+      t('Maalit: {value}', { value: row.goals }), t('Laukaukset maalia kohti: {value}', { value: row.shots }),
+      t('Torjunnat: {value}', { value: row.saves }), t('Jäähyminuutit: {value}', { value: row.penaltyMinutes }), '');
   }
-  lines.push('Laukaukset maalia kohti = joukkueen maalit + vastustajan torjunnat.');
+  lines.push(t('Laukaukset maalia kohti = joukkueen maalit + vastustajan torjunnat.'));
   if (game.events.some(event => event.type === 'Laukaus')) {
-    lines.push('Vanhat Laukaus-merkinnät ovat mukana tapahtumissa. Niitä ei lasketa laukauksiksi maalia kohti.');
+    lines.push(t('Vanhat Laukaus-merkinnät ovat mukana tapahtumissa. Niitä ei lasketa laukauksiksi maalia kohti.'));
   }
-  lines.push('', 'PELAAJATILASTOT', 'M = maalit, S = syötöt, P = pisteet. Torjunnat kirjataan maalivahdille.');
+  lines.push('', t('PELAAJATILASTOT'), t('M = maalit, S = syötöt, P = pisteet. Torjunnat kirjataan maalivahdille.'));
   for (const team of TEAMS) {
-    lines.push('', teamName(game, team));
+    lines.push('', teamName(game, team, language));
     const players = playerStats(game, team);
-    if (!players.length) lines.push('Ei kirjattuja pelaajia.');
+    if (!players.length) lines.push(t('Ei kirjattuja pelaajia.'));
     for (const player of players) {
-      lines.push(`#${player.n}${player.name ? ` ${player.name}` : ''} · M ${player.goals} · S ${player.assists} · P ${player.points} · Torjunnat ${player.saves} · Jäähyt ${player.penaltyMinutes} min`);
+      lines.push(`#${player.n}${player.name ? ` ${player.name}` : ''} · ${t('M {goals} · S {assists} · P {points} · Torjunnat {saves} · Jäähyt {minutes} min', { ...player, minutes: player.penaltyMinutes })}`);
     }
   }
-  lines.push('', `TAPAHTUMAT (${game.events.length})`, 'Ajat ovat kulunutta eräaikaa.');
+  lines.push('', t('TAPAHTUMAT ({count})', { count: game.events.length }), t('Ajat ovat kulunutta eräaikaa.'));
   const events = eventsWithScore(game);
-  if (!events.length) lines.push('Ei kirjattuja tapahtumia.');
-  for (const entry of events) lines.push(eventLine(game, entry));
-  if (game.notes) lines.push('', 'MUISTIINPANOT', String(game.notes));
+  if (!events.length) lines.push(t('Ei kirjattuja tapahtumia.'));
+  for (const entry of events) lines.push(eventLine(game, entry, language));
+  if (game.notes) lines.push('', t('MUISTIINPANOT'), String(game.notes));
   return lines.join('\n');
 }
 
@@ -114,8 +125,9 @@ function loadLogo() {
 }
 
 /** Shareable image summary. The full play-by-play remains available via textReport. */
-export async function createPoster(game) {
-  if (typeof document === 'undefined') throw new Error('Kuvakoosteen luominen vaatii selaimen.');
+export async function createPoster(game, language = getLanguage()) {
+  const t = translator(language);
+  if (typeof document === 'undefined') throw new Error(t('Kuvakoosteen luominen vaatii selaimen.'));
   const totals = score(game);
   const stats = teamStats(game);
   const periods = periodStats(game);
@@ -133,7 +145,7 @@ export async function createPoster(game) {
   canvas.width = 1080;
   canvas.height = height;
   const context = canvas.getContext('2d');
-  if (!context) throw new Error('Kuvakoostetta ei voitu luoda tällä laitteella.');
+  if (!context) throw new Error(t('Kuvakoostetta ei voitu luoda tällä laitteella.'));
   const logo = await loadLogo();
 
   function font(size, weight = 600) { context.font = `${weight} ${size}px ${FONT}`; }
@@ -231,8 +243,8 @@ export async function createPoster(game) {
   context.fillStyle = YELLOW;
   context.fillRect(48, 48, 48, 5);
   tracking('KIEKKO-ESPOO', 48, 90, 20, YELLOW, 4);
-  label('OTTELUKOOSTE', 44, 151, 58, WHITE, 'left', 900);
-  const date = gameDate(game);
+  fitted(t('OTTELUKOOSTE'), 44, 151, 798, 58, WHITE, 'left', 44, 900);
+  const date = gameDate(game, language);
   if (date) label(date, 50, 180, 22, PALE, 'left', 500);
   rounded(880, 44, 152, 152, 76, WHITE);
   if (logo) context.drawImage(logo, 900, 64, 112, 112);
@@ -245,27 +257,27 @@ export async function createPoster(game) {
   hero.addColorStop(0, '#0849B7');
   hero.addColorStop(1, '#03205B');
   rounded(48, 218, 984, 332, 28, hero);
-  label('KOTI', 286, 259, 18, '#D7E5FF', 'center', 700);
-  label('VIERAS', 794, 259, 18, '#D7E5FF', 'center', 700);
-  wrapped(teamName(game, 'home'), 286, 280, 402, 34, 2, WHITE, 'center', 25, 700);
-  wrapped(teamName(game, 'away'), 794, 280, 402, 34, 2, WHITE, 'center', 25, 700);
+  label(t('KOTI'), 286, 259, 18, '#D7E5FF', 'center', 700);
+  label(t('VIERAS'), 794, 259, 18, '#D7E5FF', 'center', 700);
+  wrapped(teamName(game, 'home', language), 286, 280, 402, 34, 2, WHITE, 'center', 25, 700);
+  wrapped(teamName(game, 'away', language), 794, 280, 402, 34, 2, WHITE, 'center', 25, 700);
   fitted(totals.home, 286, 488, 358, 144, WHITE, 'center', 80, 900);
   fitted(totals.away, 794, 488, 358, 144, WHITE, 'center', 80, 900);
   label('–', 540, 467, 80, YELLOW, 'center', 500);
-  label('OTTELUTILANNE', 540, 526, 16, '#D7E5FF', 'center', 700);
+  label(t('OTTELUTILANNE'), 540, 526, 16, '#D7E5FF', 'center', 700);
 
   rounded(48, 570, 984, 108, 20, 'rgba(255,255,255,0.065)');
   visiblePeriods.forEach((period, index) => {
     const center = 48 + (984 / visiblePeriods.length) * (index + 0.5);
-    label(`${period.period}. ERÄ`, center, 602, 17, PALE, 'center');
+    label(t('{period}. ERÄ', { period: period.period }), center, 602, 17, PALE, 'center');
     fitted(`${period.home}–${period.away}`, center, 642, 984 / visiblePeriods.length - 24, 33, WHITE, 'center', 20, 700);
   });
   if (periods.length > visiblePeriods.length) {
-    label(`Erät 1–${visiblePeriods.length} / ${periods.length}. Kaikki erät tekstikoosteessa.`, 540, 669, 15, PALE, 'center', 500);
+    fitted(t('Erät 1–{shown} / {total}. Kaikki erät tekstikoosteessa.', { shown: visiblePeriods.length, total: periods.length }), 540, 669, 940, 15, PALE, 'center', 15, 500);
   }
 
   rounded(48, 704, 984, 368, 24, WHITE);
-  tracking('OTTELUN NUMEROT', 80, 751, 20, NAVY, 2);
+  tracking(t('OTTELUN NUMEROT'), 80, 751, 20, NAVY, 2);
   const statRows = [
     ['Laukaukset maalia kohti', 'shots'],
     ['Torjunnat', 'saves'],
@@ -277,7 +289,7 @@ export async function createPoster(game) {
     const awayValue = stats.away[key];
     fitted(homeValue, 84, baseline, 150, 47, NAVY, 'left', 32, 800);
     fitted(awayValue, 996, baseline, 150, 47, NAVY, 'right', 32, 800);
-    label(name, 540, baseline - 8, 23, NAVY, 'center', 600);
+    fitted(t(name), 540, baseline - 8, 520, 23, NAVY, 'center', 21, 600);
     const total = homeValue + awayValue;
     const leftWidth = total ? 520 * homeValue / total : 260;
     rounded(280, baseline + 8, 520, 7, 3.5, '#E4E9F2');
@@ -287,42 +299,42 @@ export async function createPoster(game) {
     }
   });
 
-  tracking('MAALIT', 48, goalHeaderY + 27, 24, YELLOW, 3);
-  label(allGoals.length > goals.length ? `Viimeisimmät ${goals.length} / ${allGoals.length} maalia` : `Ottelun kaikki ${allGoals.length} maalia`, 48, goalHeaderY + 61, 21, PALE, 'left', 500);
+  tracking(t('MAALIT'), 48, goalHeaderY + 27, 24, YELLOW, 3);
+  label(allGoals.length > goals.length ? t('Viimeisimmät {shown} / {total} maalia', { shown: goals.length, total: allGoals.length }) : t('Ottelun kaikki {count} maalia', { count: allGoals.length }), 48, goalHeaderY + 61, 21, PALE, 'left', 500);
   if (!goals.length) {
     rounded(48, goalRowsY, 984, 100, 18, 'rgba(255,255,255,0.055)');
-    label('Maalimerkintöjä ei ole vielä kirjattu.', 80, goalRowsY + 59, 26, PALE, 'left', 500);
+    label(t('Maalimerkintöjä ei ole vielä kirjattu.'), 80, goalRowsY + 59, 26, PALE, 'left', 500);
   }
   goals.forEach(({ event, home, away }, index) => {
     const top = goalRowsY + index * 146;
     rounded(48, top, 984, 136, 18, '#0B1645');
     rounded(48, top + 17, 5, 102, 2.5, event.team === 'home' ? YELLOW : '#9BA9C2');
     fitted(`${home}–${away}`, 132, top + 59, 130, 38, WHITE, 'center', 24, 800);
-    label(`${event.period || 1}. ERÄ`, 132, top + 88, 16, PALE, 'center');
+    label(t('{period}. ERÄ', { period: event.period || 1 }), 132, top + 88, 16, PALE, 'center');
     label(formatTime(event.time), 132, top + 112, 21, PALE, 'center', 500);
-    fitted(teamName(game, event.team), 234, top + 26, 758, 17, PALE, 'left', 15, 600);
-    wrapped(playerName(game, event.team, event.n, 'Maalintekijä kirjaamatta'), 234, top + 34, 758, 29, 2, WHITE, 'left', 23, 700);
+    fitted(teamName(game, event.team, language), 234, top + 26, 758, 17, PALE, 'left', 15, 600);
+    wrapped(playerName(game, event.team, event.n, t('Maalintekijä kirjaamatta')), 234, top + 34, 758, 29, 2, WHITE, 'left', 23, 700);
     const assists = event.assists?.length
-      ? `Syötöt: ${event.assists.map(n => playerName(game, event.team, n)).join('  ·  ')}`
-      : 'Ei merkittyjä syöttäjiä';
+      ? t('Syötöt: {players}', { players: event.assists.map(n => playerName(game, event.team, n)).join('  ·  ') })
+      : t('Ei merkittyjä syöttäjiä');
     fitted(assists, 234, top + 119, 758, 20, PALE, 'left', 17, 500);
   });
 
   const limitedRankings = rankings.home.length > 3 || rankings.away.length > 3;
-  tracking(limitedRankings ? 'PISTEET · TOP 3 / JOUKKUE' : 'PELAAJAPISTEET', 48, pointsY + 25, 22, YELLOW, 2.2);
-  label('Maalit + syötöt', 1032, pointsY + 25, 19, PALE, 'right', 500);
+  tracking(t(limitedRankings ? 'PISTEET · TOP 3 / JOUKKUE' : 'PELAAJAPISTEET'), 48, pointsY + 25, 22, YELLOW, 2.2);
+  label(t('Maalit + syötöt'), 1032, pointsY + 25, 19, PALE, 'right', 500);
   TEAMS.forEach((team, index) => {
     const x = index === 0 ? 48 : 552;
     rounded(x, pointsCardY, 480, 274, 20, WHITE);
-    fitted(teamName(game, team), x + 28, pointsCardY + 43, 424, 25, NAVY, 'left', 20, 700);
+    fitted(teamName(game, team, language), x + 28, pointsCardY + 43, 424, 25, NAVY, 'left', 20, 700);
     const rows = rankings[team].slice(0, 3);
     if (!rows.length) {
-      label('Ei kirjattuja pisteitä.', x + 28, pointsCardY + 130, 24, '#65718A', 'left', 500);
+      label(t('Ei kirjattuja pisteitä.'), x + 28, pointsCardY + 130, 24, '#65718A', 'left', 500);
     }
     rows.forEach((player, playerIndex) => {
       const baseline = pointsCardY + 97 + playerIndex * 63;
       fitted(`#${player.n}${player.name ? ` ${player.name}` : ''}`, x + 28, baseline, 310, 25, NAVY, 'left', 19, 600);
-      fitted(`${player.points} P`, x + 452, baseline, 92, 29, ROYAL, 'right', 22, 800);
+      fitted(t('{points} P', { points: player.points }), x + 452, baseline, 92, 29, ROYAL, 'right', 22, 800);
       label(`${player.goals} + ${player.assists}`, x + 452, baseline + 24, 17, '#65718A', 'right', 500);
       if (playerIndex < 2) {
         context.fillStyle = '#E9EDF3';
@@ -332,8 +344,8 @@ export async function createPoster(game) {
   });
 
   label('KIEKKO-ESPOO · KIEKKOKIRJURI', 540, height - 49, 19, '#D0D8EA', 'center', 700);
-  label('Tapahtumien ajat ovat kulunutta eräaikaa.', 540, height - 22, 17, PALE, 'center', 500);
+  label(t('Tapahtumien ajat ovat kulunutta eräaikaa.'), 540, height - 22, 17, PALE, 'center', 500);
   return new Promise((resolve, reject) => {
-    canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Kuvakoosteen tallentaminen epäonnistui.')), 'image/png');
+    canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error(t('Kuvakoosteen tallentaminen epäonnistui.'))), 'image/png');
   });
 }

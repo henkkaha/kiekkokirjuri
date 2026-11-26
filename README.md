@@ -4,7 +4,7 @@ Offline-ottelukirjuri Kiekko-Espoon väreissä. Julkaistu GitHub Pagesiin:
 
 **https://henkkaha.github.io/kiekkokirjuri/**
 
-Versio **0.6.4**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
+Versio **0.7.0**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
 
 ## Käyttö
 
@@ -14,6 +14,14 @@ Versio **0.6.4**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia
 4. Käynnistä erä. Kello laskee alaspäin. Pysäytä se pelikatkoilla; kellon asetuksista voi korjata jäljellä olevan ajan tai valmistella seuraavan erän.
 5. Kirjaa **Maali**, **Torjunta** tai **Jäähy**. Valitse ensin joukkue, sitten pelaaja ja lisätiedot. Tapahtuma-aika otetaan ensimmäisestä painalluksesta. Maalille voi valita enintään kaksi syöttäjää.
 6. **Tilastot** näyttää joukkue- ja pelaajatilastot sekä tekstin ja PNG-kuvan viennin. **Ottelut** näyttää arkiston ja varmuuskopion viennin/palautuksen.
+
+### Kieli: Suomi, English tai Svenska
+
+Version 0.7.0 käyttöliittymä, käyttöohje, palautteen esikatselu, tekstikooste ja PNG-ottelukooste toimivat suomeksi, englanniksi ja ruotsiksi. Vaihda kieli yläpalkin kielipainikkeesta tai asetusten kielivalinnasta. Valinta tallentuu laitteeseen erilliseen avaimeen `kiekkokirjuri-language-v1`; se ei muuta otteluiden, pelaajien, joukkueiden eikä muistiinpanojen tietoja.
+
+Ensimmäisellä avauksella sovellus käyttää laitteen ensisijaista tuettua kieltä. Jos laitteen kielistä mikään ei ole suomi, englanti tai ruotsi, oletuskieli on englanti. Oma tallennettu valinta ohittaa laitteen kielen. Kaikki kolme kieliversiota sisältyvät samaan offline-asennukseen, joten kielen vaihtaminen ei tarvitse verkkoyhteyttä tai uutta sovelluspäivitystä.
+
+Ottelutiedostojen tapahtumatyypit ja valmiit jäähytiedot säilyvät alkuperäisessä muodossa. Niiden näyttöteksti käännetään valitulle kielelle; omia kuvauksia ja nimiä ei konekäännetä. Saman ottelun voi viedä eri kielillä vaihtamalla sovelluksen kielen ennen koosteen avaamista. Sovelluksen nimi pysyy kaikilla kielillä **Kiekkokirjuri**.
 
 ### Laukaukset ja torjunnat
 
@@ -81,6 +89,7 @@ Avaa `/kiekkokirjuri/` localhost-osoitteessa. Service worker toimii localhostiss
 | `index.html`, `styles.css` | Rakenne, responsiivinen ulkoasu ja saavutettavat kontrollit |
 | `app.js` | Kirjausnäkymät, lomakkeet, paikallinen tallennus ja viennit |
 | `model.js` | Ajanlaskenta, tilastot, validointi ja vanhojen tietojen siirto |
+| `i18n.js`, `*-messages.js` | Kielivalinta ja paikalliset suomi–englanti–ruotsi-käännökset |
 | `reports.js` | Täydellinen tekstiraportti ja paikallisesti luotu PNG-kooste |
 | `help.js`, `help.css` | Offline-käyttöohje ja palautteen aloitusvalinnat |
 | `feedback.js` | Palauteluonnoksen validointi, viestin muodostus ja sähköpostilinkin koodaus |
@@ -100,6 +109,8 @@ Versiolle 0.6.4 ajettiin kaikki 33 automaattista testiä hyväksytysti. Kahdeksa
 
 Version 0.6.4 palaute testattiin Chromiumissa myös 320 px:n levyisessä selainkehyksessä: ohje ja palautelomake mahtuivat näkymään, bugiraportin vastaanottaja ja sisältö täsmäsivät, tekstin kopiointi onnistui, kehitysidean valinta poisti bugikohtaiset lisätiedot viestistä ja tekniset tiedot sai jätettyä pois. Pitkän viestin kopiointivaihtoehto säilytti koko tekstin. Esikatselupalvelin pysäytettiin ja asennettu sovellus ladattiin uudelleen: ohje ja tallennettu palauteluonnos toimivat edelleen. Luonnoksen tyhjentäminen testattiin erikseen. Testiviestiä ei lähetetty sähköpostilla; varsinainen lähetys tehdään käyttäjän omassa sähköpostisovelluksessa.
 
+Versiolle 0.7.0 ajettiin kaikki 57 automaattista testiä hyväksytysti. Tarkistukset kattavat lisäksi kielivalinnan, käännetyt virheilmoitukset, muuttumattomat ottelutiedot, kielikohtaiset koosteet sekä kaikkien käännöstiedostojen offline-välimuistituksen. Puuttuva käännöstiedosto estää keskeneräisen päivityksen asentamisen. PWA-tilan kieli vaihtuu ilman verkkohakua tai sivun uudelleenlatausta. Selaintestissä tarkistettiin englanninkielinen aloitus, kielivalinta kaikilla kolmella kielellä, kielivalinnan säilyminen uudelleenlatauksessa, keskeneräisen pelaajarivin ja palauteluonnoksen säilyminen sekä käynnissä olevan kellon jatkuminen kielenvaihdossa. Ruotsiksi kirjattiin maali numerolle 0, syöttö, 2 + 2 minuutin jäähy ja vastustajan torjunta. Koosteen tilastot olivat oikein ja rangaistuksen tallennusarvo säilyi suomenkielisenä näyttötekstin vaihtuessa. Tekstikooste ja PNG-kooste avattiin ruotsiksi ja palautteen esikatselu englanniksi. 320 px:n näkymässä korjattiin tilastosivun leveyttä; sivu ja dialogit mahtuvat leveyteen myös pitkillä ruotsinkielisillä teksteillä. Esikatselupalvelin pysäytettiin, sovellus ladattiin uudelleen ja kieli vaihdettiin ruotsista englantiin: tallennettu ottelu, kielivalinta ja englanninkielinen ohje toimivat palvelimen ollessa pois käytöstä. Fyysistä iPhonea tai Android-laitetta ei testattu.
+
 Aiemman version 0.6.0 käyttö tarkistettiin Chromium-selaimessa: maalit ja kaksi syöttäjää, torjunnat, jäähyt, tilastot, kellon korjaus ja nollaraja, seuraava erä, uuden ottelun tyhjät kokoonpanot, arkiston säilyminen, kahden ikkunan ristiriidan esto, PNG-kuvakoosteen renderöinti ja JSON-vienti. Sen responsiivinen ulkoasu tarkistettiin 390 px:n ja 320 px:n levyisissä selainkehyksissä sekä työpöytäkoossa. Nämä historialliset tarkistukset eivät ole uuden version selaintestituloksia. Fyysistä iPhonea ei testattu. Tiedostovalitsimen päästä päähän -palautustesti jäi testiselaimen työkaluaikakatkaisun vuoksi vahvistamatta; varmuuskopion validointi testattiin automaattisesti.
 
 `tests/pwa-browser.mjs` on erillinen, valinnainen Playwright-integraatiotesti versiosta 0.5 siirtymiseen ja verkkoyhteyden katkaisuun. Se tarvitsee Playwrightin ja Chromiumin. Tätä testiä ei ajettu kehitysympäristössä, jossa paikallista selainbinääriä ei ollut saatavilla.
@@ -114,6 +125,8 @@ Kiekko-Espoon virallinen tunnus ja väripaletti ovat seuran omalta sivustolta. S
 - [Virallinen PNG-tunnus](https://kiekko-espoo.fi/wp-content/themes/uudesti-syntynyt/img/logos/1368624751.png)
 - [Visuaalisen ilmeen uudistus](https://kiekko-espoo.fi/uudesti-syntyneena-liigaan/)
 - [IIHF:n tilastoraportti: SOG = G + SSG](https://stats.iihf.com/Hydra/415/IHM415000_85A_23_0.pdf)
+- [IIHF Official Rule Book 2026/27](https://blob.iihf.com/iihf-media/iihfmvc/media/downloads/rule%20book/2026-27_iihf_rule_book.pdf): englanninkielinen rangaistussanasto.
+- [Svenska Ishockeyförbundet: Spelregler för ishockey 2025/26](https://www.swehockey.se/media/abxoat2y/spelregler-foer-ishockey-2025-2026-1.pdf): ruotsinkielisen rangaistussanaston vertailu. Kielipäivitys ei muuta rangaistusten sääntöjä tai tilastointia.
 
 ### EKS-kokoonpanot
 

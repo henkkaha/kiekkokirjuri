@@ -1,5 +1,7 @@
+import { pwaText } from './pwa-messages.js?v=0.7.0';
+
 /** Offline shell and explicit, non-disruptive update handling. No match data lives here. */
-export const APP_VERSION = '0.6.4';
+export const APP_VERSION = '0.7.0';
 
 const BASE_URL = new URL('./', import.meta.url);
 const STATUS_TIMEOUT_MS = 2000;
@@ -29,10 +31,21 @@ function deliver(callback, value) {
   catch (error) { console.error('Kiekkokirjuri PWA callback failed:', error); }
 }
 
+function localizedStatus() {
+  return { ...statusInfo, message: pwaText(statusInfo.message) };
+}
+
+/** Repaint the existing state after a language change; no fetch or reload. */
+export function refreshPWALanguage() {
+  const status = localizedStatus();
+  deliver(callbacks.onStatus, status);
+  return status;
+}
+
 function emitStatus(changes = {}) {
   statusInfo = { ...statusInfo, online: navigator.onLine, ...changes };
-  deliver(callbacks.onStatus, { ...statusInfo });
-  return { ...statusInfo };
+  deliver(callbacks.onStatus, localizedStatus());
+  return localizedStatus();
 }
 
 function compareVersions(left, right) {
@@ -123,7 +136,7 @@ async function refreshStatus(worker) {
   const selected = worker || registration?.waiting || registration?.active
     || navigator.serviceWorker.controller;
   consumeWorkerStatus(await askWorker(selected));
-  return { ...statusInfo };
+  return localizedStatus();
 }
 
 function watchWorker(worker) {
@@ -155,7 +168,7 @@ function watchWorker(worker) {
  */
 export function setupPWA(options = {}) {
   callbacks = { ...callbacks, ...options };
-  deliver(callbacks.onStatus, { ...statusInfo });
+  deliver(callbacks.onStatus, localizedStatus());
   if (update) deliver(callbacks.onUpdate, update);
   if (setupPromise) return setupPromise;
   setupPromise = (async () => {
@@ -223,7 +236,7 @@ export async function checkForUpdate() {
   if (checkingPromise) return checkingPromise;
   checkingPromise = (async () => {
     if (!registration) await setupPWA();
-    if (!registration) return { ...statusInfo };
+    if (!registration) return localizedStatus();
     if (!navigator.onLine) {
       return emitStatus({ state: statusInfo.updateAvailable ? 'update-ready' : 'offline',
         message: statusInfo.offlineReady ? 'Offline-käyttö valmis' : 'Päivitys tarvitsee verkkoyhteyden' });
@@ -240,7 +253,7 @@ export async function checkForUpdate() {
         : 'Päivityksen tarkistus ei onnistunut. Yritä uudelleen yhteydessä.' });
       console.warn('Kiekkokirjuri update check:', error);
     }
-    return { ...statusInfo };
+    return localizedStatus();
   })();
   try { return await checkingPromise; }
   finally { checkingPromise = null; }

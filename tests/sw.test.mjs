@@ -1,3 +1,5 @@
+import { pwaText } from '../pwa-messages.js?v=0.7.0';
+import { setLanguage } from '../i18n.js?v=0.7.0';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import test from 'node:test';
@@ -5,8 +7,8 @@ import assert from 'node:assert/strict';
 
 const source = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
 const scope = 'https://example.test/kiekkokirjuri/';
-const currentCache = 'kiekkokirjuri:/kiekkokirjuri/:0.6.4';
-const html = '<!doctype html><meta name="app-version" content="0.6.4"><h1>Kiekkokirjuri</h1>';
+const currentCache = 'kiekkokirjuri:/kiekkokirjuri/:0.7.0';
+const html = '<!doctype html><meta name="app-version" content="0.7.0"><h1>Kiekkokirjuri</h1>';
 
 function createHarness() {
   const listeners = new Map();
@@ -107,10 +109,10 @@ test('an installation caches a complete exact-version shell before activation', 
   assert.equal(worker.skipped, true);
   const installed = await worker.status();
   assert.equal(installed.offlineReady, true);
-  assert.equal(installed.version, '0.6.4');
+  assert.equal(installed.version, '0.7.0');
   const entries = await (await worker.caches.open(currentCache)).keys();
-  for (const path of ['app.js', 'model.js', 'reports.js', 'pwa.js', 'help.js', 'feedback.js', 'styles.css', 'help.css']) {
-    assert.ok(entries.some(entry => entry.url === `${scope}${path}?v=0.6.4`), `Missing offline resource: ${path}`);
+  for (const path of ['app.js', 'model.js', 'reports.js', 'pwa.js', 'help.js', 'feedback.js', 'i18n.js', 'ui-messages.js', 'domain-messages.js', 'model-messages.js', 'pwa-messages.js', 'help-messages.js', 'report-messages.js', 'styles.css', 'help.css']) {
+    assert.ok(entries.some(entry => entry.url === `${scope}${path}?v=0.7.0`), `Missing offline resource: ${path}`);
   }
   assert.ok(worker.requests.every(request => request.options.cache === 'no-store'));
   await worker.dispatch('activate');
@@ -120,14 +122,15 @@ test('an installation caches a complete exact-version shell before activation', 
 });
 
 test('a missing asset or mismatched HTML cannot replace the previous offline shell', async () => {
-  for (const reason of ['missing', 'missing-help', 'missing-feedback', 'version']) {
+  for (const reason of ['missing', 'missing-help', 'missing-feedback', 'missing-language', 'version']) {
     const worker = createHarness();
     const previous = await worker.caches.open('kiekkokirjuri-v7');
     await previous.put(`${scope}index.html`, new Response('previous shell'));
     if (reason === 'missing') worker.unavailable = `${scope}assets/icon-kk-512.png`;
-    else if (reason === 'missing-help') worker.unavailable = `${scope}help.js?v=0.6.4`;
-    else if (reason === 'missing-feedback') worker.unavailable = `${scope}feedback.js?v=0.6.4`;
-    else worker.html = html.replace('0.6.4', '0.5.0');
+    else if (reason === 'missing-help') worker.unavailable = `${scope}help.js?v=0.7.0`;
+    else if (reason === 'missing-feedback') worker.unavailable = `${scope}feedback.js?v=0.7.0`;
+    else if (reason === 'missing-language') worker.unavailable = `${scope}ui-messages.js?v=0.7.0`;
+    else worker.html = html.replace('0.7.0', '0.5.0');
     await assert.rejects(worker.dispatch('install'));
     assert.equal(worker.skipped, false);
     assert.equal(await (await previous.match(`${scope}index.html`)).text(), 'previous shell');
@@ -138,7 +141,7 @@ test('a missing asset or mismatched HTML cannot replace the previous offline she
 test('navigation uses installed shell immediately even when newer HTML is online', async () => {
   const worker = createHarness();
   await worker.dispatch('install');
-  const newerHTML = html.replace('0.6.4', '0.7.0');
+  const newerHTML = html.replace('0.7.0', '0.7.1');
   worker.html = newerHTML;
   assert.equal(await (await worker.request('./', { navigate: true })).text(), html);
   worker.online = false;
@@ -158,17 +161,17 @@ test('module cache lookup uses the exact release, including for previous open ta
   const previous = await worker.caches.open('kiekkokirjuri:/kiekkokirjuri/:0.5.0');
   await previous.put(`${scope}app.js?v=0.5.0`, new Response('previous app'));
   worker.online = false;
-  assert.equal(await (await worker.request('app.js?v=0.6.4')).text(), `asset:${scope}app.js?v=0.6.4`);
-  assert.equal(await (await worker.request('model.js')).text(), `asset:${scope}model.js?v=0.6.4`);
-  for (const path of ['help.js', 'feedback.js', 'help.css']) {
-    assert.equal(await (await worker.request(`${path}?v=0.6.4`)).text(), `asset:${scope}${path}?v=0.6.4`);
-    assert.equal(await (await worker.request(path)).text(), `asset:${scope}${path}?v=0.6.4`);
+  assert.equal(await (await worker.request('app.js?v=0.7.0')).text(), `asset:${scope}app.js?v=0.7.0`);
+  assert.equal(await (await worker.request('model.js')).text(), `asset:${scope}model.js?v=0.7.0`);
+  for (const path of ['help.js', 'feedback.js', 'help.css', 'i18n.js', 'ui-messages.js', 'domain-messages.js', 'model-messages.js', 'pwa-messages.js', 'help-messages.js', 'report-messages.js']) {
+    assert.equal(await (await worker.request(`${path}?v=0.7.0`)).text(), `asset:${scope}${path}?v=0.7.0`);
+    assert.equal(await (await worker.request(path)).text(), `asset:${scope}${path}?v=0.7.0`);
     assert.equal((await worker.request(`${path}?v=0.4.0`)).type, 'error');
   }
   assert.equal(await (await worker.request('app.js?v=0.5.0')).text(), 'previous app');
   assert.equal((await worker.request('app.js?v=0.4.0')).type, 'error');
-  assert.equal(await worker.request('/another-app/app.js?v=0.6.4'), undefined);
-  assert.equal(await worker.request('https://another.test/app.js?v=0.6.4'), undefined);
+  assert.equal(await worker.request('/another-app/app.js?v=0.7.0'), undefined);
+  assert.equal(await worker.request('https://another.test/app.js?v=0.7.0'), undefined);
 });
 
 test('cache cleanup is scoped and keeps one previous release', async () => {
@@ -197,7 +200,7 @@ test('cache cleanup is scoped and keeps one previous release', async () => {
 
 const clientSource = await readFile(new URL('../pwa.js', import.meta.url), 'utf8');
 
-function createClientHarness({ workerVersion = '0.6.4', offline = false } = {}) {
+function createClientHarness({ workerVersion = '0.7.0', offline = false } = {}) {
   let reloads = 0;
   let updateChecks = 0;
   const worker = Object.assign(new EventTarget(), {
@@ -226,16 +229,16 @@ function createClientHarness({ workerVersion = '0.6.4', offline = false } = {}) 
     location: { reload() { reloads += 1; } },
   });
   const context = {
-    URL, MessageChannel, console, setTimeout, clearTimeout,
+    URL, MessageChannel, console, setTimeout, clearTimeout, pwaText,
     navigator: { serviceWorker, onLine: !offline },
     document: Object.assign(new EventTarget(), { visibilityState: 'visible' }),
     window,
   };
   // Replace only the module wrapper and module URL to run the browser-facing API
   // in a fresh Node VM with mocked browser events. No implementation is changed.
-  const executable = clientSource.replace(/^export /gm, '')
-    .replace('import.meta.url', JSON.stringify(`${scope}pwa.js?v=0.6.4`));
-  vm.runInNewContext(`${executable}\nglobalThis.api = { setupPWA, checkForUpdate };`, context);
+  const executable = clientSource.replace(/^import .*;\n/gm, '').replace(/^export /gm, '')
+    .replace('import.meta.url', JSON.stringify(`${scope}pwa.js?v=0.7.0`));
+  vm.runInNewContext(`${executable}\nglobalThis.api = { setupPWA, checkForUpdate, refreshPWALanguage };`, context);
   return {
     api: context.api, serviceWorker,
     get reloads() { return reloads; },
@@ -244,7 +247,7 @@ function createClientHarness({ workerVersion = '0.6.4', offline = false } = {}) 
 }
 
 test('client update notification never reloads automatically and respects unsaved-work guard', async () => {
-  const client = createClientHarness({ workerVersion: '0.7.0' });
+  const client = createClientHarness({ workerVersion: '0.7.1' });
   let allowed = false;
   let offered;
   const states = [];
@@ -253,7 +256,7 @@ test('client update notification never reloads automatically and respects unsave
     onUpdate: update => { offered = update; },
     canReload: () => allowed,
   });
-  assert.equal(offered.version, '0.7.0');
+  assert.equal(offered.version, '0.7.1');
   assert.equal(client.reloads, 0);
   client.serviceWorker.dispatchEvent(new Event('controllerchange'));
   await client.api.checkForUpdate();
@@ -264,9 +267,9 @@ test('client update notification never reloads automatically and respects unsave
 
   // An old worker can answer after a new one; it must not hide the newer update.
   client.serviceWorker.dispatchEvent(new MessageEvent('message', { data: {
-    type: 'PWA_STATUS', version: '0.6.4', scope, offlineReady: true,
+    type: 'PWA_STATUS', version: '0.7.0', scope, offlineReady: true,
   } }));
-  assert.equal(states.at(-1).workerVersion, '0.7.0');
+  assert.equal(states.at(-1).workerVersion, '0.7.1');
   assert.equal(states.at(-1).updateAvailable, true);
   allowed = true;
   assert.equal(await offered.apply(), true);
@@ -283,4 +286,23 @@ test('an existing installed worker reports ready offline even if register reject
   await client.api.checkForUpdate();
   assert.equal(client.updateChecks, 0);
   assert.equal(client.reloads, 0);
+});
+
+test('changing language refreshes offline status without any update check or reload', async () => {
+  try {
+    setLanguage('en');
+    const client = createClientHarness({ offline: true });
+    const states = [];
+    await client.api.setupPWA({ onStatus: status => states.push(status) });
+    assert.equal(states.at(-1).message, 'Ready to use offline');
+    setLanguage('sv');
+    const status = client.api.refreshPWALanguage();
+    assert.equal(status.message, 'Klar att använda offline');
+    assert.equal(states.at(-1).message, 'Klar att använda offline');
+    assert.equal(status.offlineReady, true);
+    assert.equal(status.state, 'offline');
+    assert.equal(status.online, false);
+    assert.equal(client.reloads, 0);
+    assert.equal(client.updateChecks, 0);
+  } finally { setLanguage('fi'); }
 });
