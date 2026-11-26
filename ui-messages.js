@@ -1,4 +1,4 @@
-import { createTranslator } from './i18n.js?v=0.7.0';
+import { createTranslator } from './i18n.js?v=0.7.1';
 
 export const UI_MESSAGES = {
   "Kotijoukkue": {

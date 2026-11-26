@@ -4,7 +4,15 @@ Offline-ottelukirjuri Kiekko-Espoon väreissä. Julkaistu GitHub Pagesiin:
 
 **https://henkkaha.github.io/kiekkokirjuri/**
 
-Versio **0.7.0**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
+Versio **0.7.1**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
+
+### Korjaus 0.7.1: iPhonen yläreuna
+
+Yläpalkki varaa tilan iPhonen tilapalkille ja Dynamic Islandille ja pysyy näkyvissä sivua vieritettäessä. Myös pitkien valikoiden ja lomakkeiden yläreuna sekä vaaka-asennon sivureunat huomioivat laitteen turva-alueet. Päivitys säilyttää ottelut, kokoonpanot, kielivalinnan ja palauteluonnokset.
+
+Varmennus: kaikki 57 automaattista testiä läpäistiin. Chrome-selaimessa tarkistettiin käyttöliittymä simuloiduilla iPhonen turva-alueilla: 440 × 956 px (ylä 62 px, ala 34 px), 320 × 568 px (ylä 20 px) ja vaaka-asento 956 × 440 px (vasen 62 px, oikea ja ala 21 px). Lisäksi tarkistettiin 390 × 844 px ilman turva-alueita. Yläpalkin kaikki kolme painiketta säilyivät näkyvissä myös sivun lopussa. Pitkän ohjeen sulkemispainike pysyi näkyvissä ja alapainike turva-alueen yläpuolella sekä vierityksen keskellä että lopussa. Vaaka-asennossa tarkistettiin uuden ottelun lomakkeen kenttiin siirtyminen ja toimintopainikkeet. Vaakasuoraa ylivuotoa ei havaittu, ja olemassa oleva testipeli säilyi. Fyysistä iPhonea ei ole testattu tässä ympäristössä.
+
+Turva-alueiden toteutus noudattaa [WebKitin ohjetta](https://webkit.org/blog/7929/designing-websites-for-iphone-x/): koko näytön täyttävässä näkymässä käyttöliittymän sisältö sijoitetaan `env(safe-area-inset-*)`-reunojen sisäpuolelle.
 
 ## Käyttö
 

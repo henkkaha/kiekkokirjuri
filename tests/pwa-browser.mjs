@@ -49,7 +49,7 @@ const server = http.createServer(async (request, response) => {
     // A synthetic next release tests activation while the current page is busy.
     // It is generated only by this isolated server; source files stay untouched.
     if (serverRelease === 'next' && /\.(html|js|css|json)$/.test(file)) {
-      body = Buffer.from(body.toString('utf8').replaceAll('0.7.0', '0.7.1'));
+      body = Buffer.from(body.toString('utf8').replaceAll('0.7.1', '0.7.2'));
     }
     served.push({ release: serverRelease, pathname: url.pathname, search: url.search });
     response.writeHead(200, {
@@ -109,7 +109,7 @@ async function waitForRelease(page, version) {
   }, version, { timeout: 30000, polling: 250 });
 }
 
-async function readEvidence(page, version = '0.7.0') {
+async function readEvidence(page, version = '0.7.1') {
   return page.evaluate(async expected => {
     const model = await import(`./model.js?v=${expected}`);
     const raw = JSON.parse(localStorage.getItem('ke-match-v1'));
@@ -187,14 +187,14 @@ try {
   assert.match(await page.locator('.scoreboard').textContent(), /Laukaukset: 8 – 4/);
   result.stages.push({ stage, oldScore: '2 – 1', oldShots: '8 – 4', oldCache: 'kiekkokirjuri-v7' });
 
-  stage = 'upgrade-to-0.7.0';
+  stage = 'upgrade-to-0.7.1';
   serverRelease = 'current';
   await page.reload({ waitUntil: 'networkidle' });
   await page.locator('[data-score="home"]').waitFor();
-  await waitForRelease(page, '0.7.0');
+  await waitForRelease(page, '0.7.1');
   const upgraded = await readEvidence(page);
   assertMatchPreserved(upgraded);
-  assert.equal(upgraded.version, '0.7.0');
+  assert.equal(upgraded.version, '0.7.1');
   assert.equal(upgraded.clock, '12:55');
   assert.ok(!upgraded.caches.includes('kiekkokirjuri-v7'));
   assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('ke-match-v1'))), fixture,
@@ -206,11 +206,11 @@ try {
   await context.setOffline(true);
   await page.reload({ waitUntil: 'load' });
   await page.locator('[data-score="home"]').waitFor();
-  await waitForRelease(page, '0.7.0');
+  await waitForRelease(page, '0.7.1');
   const offline = await readEvidence(page);
   assertMatchPreserved(offline);
   assert.equal(offline.online, false);
-  assert.equal(offline.version, '0.7.0');
+  assert.equal(offline.version, '0.7.1');
   assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('ke-match-v1'))), fixture);
   await page.locator('a[href="#pelaajat"]').click();
   assert.match(await page.locator('[data-action="edit-player"][data-number="0"]').textContent(), /Nolla/);
@@ -233,16 +233,16 @@ try {
   await page.evaluate(token => { window.__pwaTestPageToken = token; }, sentinel);
   serverRelease = 'next';
   await page.evaluate(async () => (await navigator.serviceWorker.getRegistration()).update());
-  await waitForRelease(page, '0.7.1');
+  await waitForRelease(page, '0.7.2');
   await page.locator('#update-banner:not([hidden])').waitFor();
   assert.equal(await page.evaluate(() => window.__pwaTestPageToken), sentinel);
-  assert.equal(await page.locator('meta[name="app-version"]').getAttribute('content'), '0.7.0');
+  assert.equal(await page.locator('meta[name="app-version"]').getAttribute('content'), '0.7.1');
   assert.equal(await page.locator('#manual-number').inputValue(), '44');
   assert.equal(await page.evaluate(() => document.querySelector('#sheet').open), true);
   assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('ke-match-v1')).start), clockStart);
-  assert.match(await page.locator('#update-banner').textContent(), /0\.7\.1/);
+  assert.match(await page.locator('#update-banner').textContent(), /0\.7\.2/);
   await page.screenshot({ path: path.join(artifacts, 'pwa-update-preserves-form.png'), fullPage: true });
-  result.stages.push({ stage, installedWorker: '0.7.1', visiblePage: '0.7.0',
+  result.stages.push({ stage, installedWorker: '0.7.2', visiblePage: '0.7.1',
     noAutomaticReload: true, unsavedNumber: '44', clockRunning: true });
 
   stage = 'explicit-update-guard-and-apply';
@@ -253,9 +253,9 @@ try {
   await page.locator('#clock-toggle').click();
   assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('ke-match-v1')).start), null);
   await page.locator('[data-action="apply-update"]').click();
-  await page.waitForFunction(() => document.querySelector('meta[name="app-version"]')?.content === '0.7.1');
+  await page.waitForFunction(() => document.querySelector('meta[name="app-version"]')?.content === '0.7.2');
   await page.locator('[data-score="home"]').waitFor();
-  const applied = await readEvidence(page, '0.7.1');
+  const applied = await readEvidence(page, '0.7.2');
   assertMatchPreserved(applied);
   result.stages.push({ stage, blockedWhileClockRunning: true, appliedVersion: applied.version,
     matchAndArchivePreserved: true });

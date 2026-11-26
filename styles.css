@@ -81,3 +81,56 @@
 
 /* A long team name or translated action must not widen the page grid. */
 .two-column>*{min-width:0}.comparison-head>*{min-width:0;overflow-wrap:anywhere}.comparison-row{grid-template-columns:32px minmax(0,1fr) 32px}.period-table{table-layout:fixed}.period-table th,.period-table td{overflow-wrap:anywhere}.export-actions{flex-wrap:wrap}.export-actions .button{flex:1 1 140px;min-width:0;white-space:normal;line-height:1.5}.export-actions .button svg{flex:none}.content-panel .table-scroll{max-width:100%}
+
+/* Installed iPhone apps fill the screen, including the status bar area.
+   Keep that space outside the header's full-height, touchable content row. */
+:root{
+  --safe-area-top:env(safe-area-inset-top,0px);
+  --safe-area-right:env(safe-area-inset-right,0px);
+  --safe-area-bottom:env(safe-area-inset-bottom,0px);
+  --safe-area-left:env(safe-area-inset-left,0px);
+  --header-row-height:90px;
+  --page-gutter:32px;
+  --page-bottom-space:130px;
+  --nav-bottom-gap:24px;
+  --toast-bottom-space:112px;
+}
+html{scroll-padding-top:calc(var(--safe-area-top) + var(--header-row-height) + 12px)}
+.app-header{
+  position:sticky;top:0;z-index:20;height:auto;
+  padding:var(--safe-area-top) var(--safe-area-right) 0 var(--safe-area-left);
+}
+.header-inner{height:var(--header-row-height)}
+.skip-link:focus{top:calc(var(--safe-area-top) + 12px);left:calc(var(--safe-area-left) + 12px)}
+.main{
+  padding-left:calc(var(--page-gutter) + var(--safe-area-left));
+  padding-right:calc(var(--page-gutter) + var(--safe-area-right));
+  padding-bottom:calc(var(--page-bottom-space) + var(--safe-area-bottom));
+}
+.update-banner,.storage-banner{
+  padding-left:calc(20px + var(--safe-area-left));
+  padding-right:calc(20px + var(--safe-area-right));
+}
+.bottom-nav{bottom:calc(var(--nav-bottom-gap) + var(--safe-area-bottom))}
+.toast{bottom:calc(var(--toast-bottom-space) + var(--safe-area-bottom))}
+.sheet{
+  inset:var(--safe-area-top) var(--safe-area-right) 0 var(--safe-area-left);
+  max-width:min(540px,calc(100% - var(--safe-area-left) - var(--safe-area-right) - 32px));
+  max-height:calc(100vh - var(--safe-area-top) - var(--safe-area-bottom) - 64px);
+  max-height:calc(100dvh - var(--safe-area-top) - var(--safe-area-bottom) - 64px);
+  padding-bottom:var(--safe-area-bottom);
+}
+.sheet-header{position:sticky;top:0;z-index:3;background:#fff}
+@media(max-width:900px){
+  :root{--page-gutter:24px;--page-bottom-space:125px}
+}
+@media(max-width:680px){
+  :root{--header-row-height:77px;--page-gutter:18px;--page-bottom-space:126px;--nav-bottom-gap:12px;--toast-bottom-space:100px}
+  .sheet{
+    width:calc(100% - var(--safe-area-left) - var(--safe-area-right));
+    max-width:calc(100% - var(--safe-area-left) - var(--safe-area-right));
+    max-height:calc(100vh - var(--safe-area-top) - 12px);
+    max-height:calc(100dvh - var(--safe-area-top) - 12px);
+  }
+}
+@media(max-width:380px){:root{--page-gutter:13px}}

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   LANGUAGE_STORAGE_KEY, LANGUAGES, getLanguage, getLocale, setLanguage,
   resolveLanguage, createTranslator,
-} from '../i18n.js?v=0.7.0';
+} from '../i18n.js?v=0.7.1';
 
 test('language preference uses an explicit saved choice before device languages', () => {
   assert.equal(LANGUAGE_STORAGE_KEY, 'kiekkokirjuri-language-v1');

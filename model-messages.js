@@ -1,4 +1,4 @@
-import { createTranslator } from './i18n.js?v=0.7.0';
+import { createTranslator } from './i18n.js?v=0.7.1';
 
 export const MODEL_MESSAGES = {
   'Ottelun tietoja ei voi lukea. Tarkista varmuuskopion muoto.': { en: 'Could not read the match data. Check the backup format.', sv: 'Matchuppgifterna kunde inte läsas. Kontrollera säkerhetskopians format.' },

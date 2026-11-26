@@ -1,15 +1,15 @@
 import { VERSION, createGame, normalizeState, elapsed, elapsedPrecise, formatTime, score, teamStats,
   playerStats, periodStats, archiveAndNew, openArchive, validateEvent,
-  normalizeNumber, nextPeriod, snapshot } from './model.js?v=0.7.0';
-import { setupPWA, checkForUpdate, refreshPWALanguage } from './pwa.js?v=0.7.0';
-import { textReport, createPoster } from './reports.js?v=0.7.0';
-import { renderHelp } from './help.js?v=0.7.0';
+  normalizeNumber, nextPeriod, snapshot } from './model.js?v=0.7.1';
+import { setupPWA, checkForUpdate, refreshPWALanguage } from './pwa.js?v=0.7.1';
+import { textReport, createPoster } from './reports.js?v=0.7.1';
+import { renderHelp } from './help.js?v=0.7.1';
 import { FEEDBACK_STORAGE_KEY, FEEDBACK_KINDS, getFeedbackKinds, FEEDBACK_LIMITS, createFeedbackDraft,
-  normalizeFeedbackDraft, validateFeedbackDraft, buildFeedbackEmail } from './feedback.js?v=0.7.0';
+  normalizeFeedbackDraft, validateFeedbackDraft, buildFeedbackEmail } from './feedback.js?v=0.7.1';
 
-import { LANGUAGE_STORAGE_KEY, LANGUAGES, getLanguage, getLocale, resolveLanguage, setLanguage } from './i18n.js?v=0.7.0';
-import { uiText as tr } from './ui-messages.js?v=0.7.0';
-import { domainText } from './domain-messages.js?v=0.7.0';
+import { LANGUAGE_STORAGE_KEY, LANGUAGES, getLanguage, getLocale, resolveLanguage, setLanguage } from './i18n.js?v=0.7.1';
+import { uiText as tr } from './ui-messages.js?v=0.7.1';
+import { domainText } from './domain-messages.js?v=0.7.1';
 
 let savedLanguage = null;
 try { savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY); } catch { /* Language remains usable in memory. */ }
