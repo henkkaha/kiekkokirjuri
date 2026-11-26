@@ -1,5 +1,5 @@
 /* Kiekkokirjuri: an immutable, complete offline shell for each release. */
-const RELEASE = '0.6.1';
+const RELEASE = '0.6.2';
 const SCOPE = new URL(self.registration.scope);
 const CACHE_PREFIX = `kiekkokirjuri:${SCOPE.pathname}:`;
 const CACHE_NAME = `${CACHE_PREFIX}${RELEASE}`;
@@ -143,16 +143,11 @@ self.addEventListener('activate', event => {
 });
 
 async function navigate(request) {
-  try {
-    const response = await fetchFresh(request, NAVIGATION_TIMEOUT_MS);
-    if (response.ok) return response;
-  } catch {
-    // A failed request or a slow hall connection falls back to the installed shell.
-  }
   const cache = await caches.open(CACHE_NAME);
-  // Do not overwrite this with online HTML: that HTML might already refer to a
-  // newer release whose assets have not finished installing yet.
-  return (await cache.match(INDEX_URL)) || Response.error();
+  const installed = await cache.match(INDEX_URL);
+  if (installed) return installed;
+  try { return await fetchFresh(request, NAVIGATION_TIMEOUT_MS); }
+  catch { return Response.error(); }
 }
 
 async function asset(request, canonicalURL) {

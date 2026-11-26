@@ -1,8 +1,8 @@
 import { VERSION, createGame, normalizeState, elapsed, elapsedPrecise, formatTime, score, teamStats,
   playerStats, periodStats, archiveAndNew, openArchive, validateEvent,
-  normalizeNumber, nextPeriod, snapshot } from './model.js?v=0.6.1';
-import { setupPWA, checkForUpdate } from './pwa.js?v=0.6.1';
-import { textReport, createPoster } from './reports.js?v=0.6.1';
+  normalizeNumber, nextPeriod, snapshot } from './model.js?v=0.6.2';
+import { setupPWA, checkForUpdate } from './pwa.js?v=0.6.2';
+import { textReport, createPoster } from './reports.js?v=0.6.2';
 
 const STORAGE_KEY = 'ke-match-v1';
 const $ = id => document.getElementById(id);
@@ -369,14 +369,16 @@ function submitEvent() {
 
 const ROSTER_CACHE='kiekkokirjuri-rosters-v1';
 function validateRoster(raw){if(raw.schema!==1||!Array.isArray(raw.teams)||typeof raw.event!=="string"||typeof raw.updated!=="string"||typeof raw.opponent!=="string"||!["home","away"].includes(raw.side))throw Error("Virheellinen kokoonpanotiedosto");let ids=new Set();for(const t of raw.teams){if(!/^[a-z0-9-]+$/.test(t.id)||ids.has(t.id)||typeof t.name!=="string"||!Array.isArray(t.players))throw Error("Virheellinen ryhmä");ids.add(t.id);let ns=new Set();for(const p of t.players){if(!Array.isArray(p)||p.length!==2||!Number.isInteger(p[0])||p[0]<0||p[0]>99||ns.has(p[0])||typeof p[1]!=="string"||!p[1].trim()||p[1].length>60)throw Error("Virheellinen tai toistuva pelaajanumero");ns.add(p[0])}}return raw}
-let rosterPresets=null;
-let rosterSource='';
-try {const raw=localStorage.getItem(ROSTER_CACHE);if(raw){rosterPresets=validateRoster(JSON.parse(raw));rosterSource='Tallennettu kopio';}}catch{}
-async function refreshRosterPresets(){
+let rosterPresets=validateRoster({"schema":1,"event":"GrIFK – EKS","updated":"2026-11-26","opponent":"GrIFK","side":"away","teams":[{"id":"blue","name":"Blue","players":[[58,"Honkimaa"],[15,"Haho"],[26,"Jantunen"],[14,"Niemelä"],[19,"Pekkarinen"],[64,"Laurila"]]},{"id":"white","name":"White","players":[[61,"Koponen"],[11,"Schlosser"],[28,"Kipinä"],[24,"Kniazev"],[18,"Suokko"],[98,"Alho"],[88,"Pyykkö"]]},{"id":"yellow","name":"Yellow","players":[[17,"Hannonen"],[28,"Lehto"],[12,"Nylund"],[36,"Rämä"],[18,"Tapioharju"],[91,"Luukkanen"],[66,"Heikel"]]}]});
+let rosterSource='Asennettu offline-kokoonpano';
+try {const raw=localStorage.getItem(ROSTER_CACHE);if(raw){const saved=validateRoster(JSON.parse(raw));if(saved.updated>=rosterPresets.updated){rosterPresets=saved;rosterSource='Tallennettu kopio';}}}catch{}
+let rosterRefresh=null;
+async function refreshRosterPresets(){if(!navigator.onLine)return;if(rosterRefresh)return rosterRefresh;rosterRefresh=(async()=>{
   const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),3500);
-  try{const response=await fetch('./rosters.json',{cache:'no-store',signal:controller.signal});if(!response.ok)throw Error('Kokoonpano ei saatavilla');const data=validateRoster(await response.json());rosterPresets=data;rosterSource='Verkosta tarkistettu';try{localStorage.setItem(ROSTER_CACHE,JSON.stringify(data))}catch{}}
+  try{const response=await fetch('./rosters.json',{cache:'no-store',signal:controller.signal});if(!response.ok)throw Error('Kokoonpano ei saatavilla');const data=validateRoster(await response.json());if(data.updated<rosterPresets.updated)return;rosterPresets=data;rosterSource='Verkosta tarkistettu';try{localStorage.setItem(ROSTER_CACHE,JSON.stringify(data))}catch{}}
   catch{rosterSource=rosterPresets?'Tallennettu kopio · tarkista ajantasaisuus':'Kokoonpanoa ei saatu ladattua';}
   finally{clearTimeout(timer);}
+})();try{await rosterRefresh}finally{rosterRefresh=null;}
 }
 function rosterOptions(data){return '<option value="">Tyhjä kokoonpano / käsin</option>'+(data?.teams||[]).map(t=>'<option value="'+escapeHTML(t.id)+'">EKS '+escapeHTML(t.name)+' · '+t.players.length+' pelaajaa</option>').join('')}
 function wireRosterForm(){
@@ -393,9 +395,11 @@ function wireRosterForm(){
   }
   select.innerHTML=rosterOptions(data);if(data)side.value=data.side;statusText();updatePreview(false);
   select.addEventListener('change',()=>updatePreview(true));side.addEventListener('change',()=>updatePreview(true));
-  void refreshRosterPresets().then(()=>{if($('new-game-form')!==form)return;if(select.value){status.textContent+=' · Avaa lomake uudelleen tarkistaaksesi muutokset';return;}data=rosterPresets;form.rosterSnapshot=data;select.innerHTML=rosterOptions(data);if(data)side.value=data.side;statusText();updatePreview(false);});
+  // Use the local snapshot immediately. Background refresh never changes an open form.
 }
 void refreshRosterPresets();
+window.addEventListener('online',()=>void refreshRosterPresets());
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&state.start===null)void refreshRosterPresets();});
 function showNewGame() {
   pending = null;
   openSheet('Uusi ottelu','Uusi peli, puhdas tulostaulu.',`<div class="stack"><div class="helper-box"><label class="field" for="roster-preset">EKS:n kokoonpano<select id="roster-preset" name="preset"></select></label><p class="field-note" id="roster-status"></p><label class="field" for="roster-side" style="margin-top:12px">EKS pelaa<select id="roster-side" name="presetSide" disabled><option value="home">Kotijoukkueena</option><option value="away">Vierasjoukkueena</option></select></label><div id="roster-preview" class="roster-preview"></div></div><label class="field" for="new-home">Kotijoukkue<input id="new-home" name="home" value="${escapeHTML(state.home)}" maxlength="60" required></label><label class="field" for="new-away">Vierasjoukkue<input id="new-away" name="away" placeholder="Vastustajan nimi" maxlength="60"></label><div class="form-grid"><label class="field" for="new-length">Erän pituus, min<input id="new-length" name="length" type="number" inputmode="numeric" min="1" max="60" value="${state.periodLength/60}" required></label><label class="field" for="new-date">Ottelupäivä<input id="new-date" name="date" type="date" value="${localDate()}" required></label></div><div class="helper-box"><strong>Nykyinen ottelu siirtyy arkistoon.</strong><br>Uuden ottelun tulos ja tapahtumat nollautuvat. Valittu EKS-kokoonpano kopioidaan uuteen otteluun; vastustajan pelaajat lisätään tarvittaessa käsin.</div></div>`,

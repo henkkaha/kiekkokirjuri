@@ -1,4 +1,4 @@
-import { elapsed, formatTime, score, teamStats, playerStats, periodStats } from './model.js?v=0.6.1';
+import { elapsed, formatTime, score, teamStats, playerStats, periodStats } from './model.js?v=0.6.2';
 
 const NAVY = '#000032';
 const ROYAL = '#003DA5';
