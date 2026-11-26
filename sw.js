@@ -1,5 +1,5 @@
 /* Kiekkokirjuri: an immutable, complete offline shell for each release. */
-const RELEASE = '0.6.2';
+const RELEASE = '0.6.3';
 const SCOPE = new URL(self.registration.scope);
 const CACHE_PREFIX = `kiekkokirjuri:${SCOPE.pathname}:`;
 const CACHE_NAME = `${CACHE_PREFIX}${RELEASE}`;
@@ -14,12 +14,11 @@ const ASSETS = [
   `./reports.js?v=${RELEASE}`,
   `./pwa.js?v=${RELEASE}`,
   './manifest.json',
-  './icon.svg',
   './assets/club-logo.svg',
   './assets/club-logo.png',
-  './assets/icon-192.png',
-  './assets/icon-512.png',
-  './assets/apple-touch-icon.png',
+  './assets/icon-kk-192.png',
+  './assets/icon-kk-512.png',
+  './assets/apple-touch-icon-kk.png',
 ].map(path => new URL(path, SCOPE).href);
 const ASSET_URLS = new Set(ASSETS);
 const MODULE_PATHS = new Set(['app.js', 'model.js', 'reports.js', 'pwa.js', 'styles.css']

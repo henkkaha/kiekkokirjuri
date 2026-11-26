@@ -4,12 +4,12 @@ Offline-ottelukirjuri Kiekko-Espoon väreissä. Julkaistu GitHub Pagesiin:
 
 **https://henkkaha.github.io/kiekkokirjuri/**
 
-Versio **0.6.2**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
+Versio **0.6.3**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
 
 ## Käyttö
 
 1. Avaa sovellus kerran verkkoyhteydellä. Valikon teksti **Valmis myös ilman yhteyttä** kertoo, että koko sovellus on tallennettu offline-käyttöä varten.
-2. Valitse **Uusi ottelu**, anna joukkueet ja valitse erän pituus. Nykyinen ottelu siirtyy arkistoon. Molempien joukkueiden kokoonpanot alkavat tyhjistä.
+2. Valitse **Uusi ottelu**, anna joukkueet ja valitse erän pituus. Voit valita valmiin EKS-kokoonpanon tai aloittaa tyhjillä pelaajalistoilla. Nykyinen ottelu siirtyy arkistoon.
 3. Lisää pelaajien numerot ja halutessasi sukunimet **Pelaajat**-välilehdellä. Numeroita ja nimiä voi täydentää myös jälkikäteen. Numero 0 on sallittu, ja sama numero voi kuulua eri joukkueiden pelaajille.
 4. Käynnistä erä. Kello laskee alaspäin. Pysäytä se pelikatkoilla; kellon asetuksista voi korjata jäljellä olevan ajan tai valmistella seuraavan erän.
 5. Kirjaa **Maali**, **Torjunta** tai **Jäähy**. Valitse ensin joukkue, sitten pelaaja ja lisätiedot. Tapahtuma-aika otetaan ensimmäisestä painalluksesta. Maalille voi valita enintään kaksi syöttäjää.
@@ -23,9 +23,27 @@ Torjunta kirjataan torjuneen maalivahdin joukkueelle. Sama tapahtuma lisää vas
 
 Vanhojen versioiden `Laukaus`-tapahtumat säilyvät historiassa ja tekstiviennissä, mutta eivät kuulu laukaukset maalia kohti -lukuun. Rangaistukset ovat kirjaustietoja; sovellus ei ratkaise jäähyjen samanaikaisuutta, päättymistä maalista tai sarjakohtaisia sääntötulkintoja.
 
-### iPhone
+### Lisää puhelimen aloitusnäyttöön
 
-Avaa sovellus Safarissa ja valitse **Jaa → Lisää Koti-valikkoon**. Avaa sitten Kirjuri-kuvake verkkoyhteydellä ja tarkista offline-valmius. Jos Koti-valikon sovellus käyttää eri tallennustilaa kuin aiempi selainikkuna, siirrä ottelut JSON-varmuuskopiolla.
+**iPhone:** avaa sovellus Safarissa ja valitse **Jaa → Lisää Koti-valikkoon**. Ota **Avaa verkkoappina** käyttöön, jos valinta näkyy. Tarkista nimeksi **Kiekkokirjuri** ja paina **Lisää**.
+
+**Android:** avaa sovellus Chromessa ja valitse **⋮ → Asenna ja luo pikakuvake → Asenna**. Joissakin selainversioissa valinta on **Lisää aloitusnäyttöön**.
+
+Avaa uusi **Kiekkokirjuri**-kuvake kerran verkkoyhteydellä. Odota, että sovelluksen asetuksissa lukee **Valmis myös ilman yhteyttä**. Sen jälkeen ottelun kirjaaminen onnistuu ilman verkkoa. Ensimmäinen asennus, uudet kokoonpanot ja sovelluspäivitykset tarvitsevat verkkoyhteyden.
+
+Version 0.6.3 asennusnimi on kokonainen **Kiekkokirjuri**, ja kuvakkeessa on **KK**. Jo lisätty iPhonen kuvake ei välttämättä vaihda nimeään tai kuvaansa itsestään. Vie otteluista JSON-varmuuskopio vanhassa sovelluksessa tai selainikkunassa ennen uuden kuvakkeen lisäämistä. Jos uusi kuvake avaa tyhjän ottelun, palauta varmuuskopio siinä. Säilytä vanha sovellus, kunnes ottelut näkyvät uudessa; sivustotietoja ei tarvitse tyhjentää päivitystä varten.
+
+Asennusohjeiden lähteet: [Apple: sivuston muuttaminen apiksi iPhonessa](https://support.apple.com/fi-fi/guide/iphone/iphea86e5236/ios) ja [Google: verkkoappien käyttö Androidissa](https://support.google.com/chrome/answer/9658361?co=GENIE.Platform%3DAndroid&hl=fi).
+
+### Jaettavat kuvat
+
+Version 0.6.3 kolme kuvaa on luotu erillisillä kuvanluontipyynnöillä. Kuvakkeen lähtökohtana on seuran tunnus; **KK** erottaa tämän epävirallisen työkalun seuran omista sovelluksista.
+
+- [WhatsApp-ohjekuva](media/kiekkokirjuri-whatsapp-ohje.png): käyttö, asennus molempiin puhelimiin ja valmistelu offline-käyttöön.
+- [Neliömainos](media/kiekkokirjuri-neliomainos.png): lyhyt esittely ja sovelluksen osoite.
+- [KK-kuvakkeen alkuperäinen kuva](media/kiekkokirjuri-kk-master.png): sama kuva on viety sovelluksen tarvitsemiin 180, 192 ja 512 pikselin kokoihin.
+
+Mainoskuvat eivät kuulu sovelluksen offline-lataukseen, joten ne eivät kasvata puhelimeen asennettavaa sovelluspakettia.
 
 ### Tallennus ja päivitykset
 
@@ -62,9 +80,9 @@ node --test tests/*.test.mjs
 node --check app.js
 ```
 
-25 automaattista testiä kattavat laukauslaskennan, pelaajan numeron 0, syöttäjät, vanhat varmuuskopiot, arkistojen eristyksen, kellon toistuvien pysäytysten tarkkuuden, raportit sekä offline-välimuistin ja päivityksen eheystarkistukset.
+Versiolle 0.6.3 ajettiin 25 automaattista testiä hyväksytysti sekä JavaScriptin syntaksitarkistukset. Testit kattavat laukauslaskennan, pelaajan numeron 0, syöttäjät, vanhat varmuuskopiot, arkistojen eristyksen, kellon toistuvien pysäytysten tarkkuuden, raportit sekä offline-välimuistin ja päivityksen eheystarkistukset.
 
-Versio 0.6.2 tarkistettiin myös oikeassa Chromium-selaimessa: maalit ja kaksi syöttäjää, torjunnat, jäähyt, tilastot, kellon korjaus ja nollaraja, seuraava erä, uuden ottelun tyhjät kokoonpanot, arkiston säilyminen, kahden ikkunan ristiriidan esto, PNG-kuvakoosteen renderöinti ja JSON-vienti. Responsiivinen ulkoasu tarkistettiin 390 px:n ja 320 px:n levyisissä selainkehyksissä sekä työpöytäkoossa. Fyysistä iPhonea ei testattu. Tiedostovalitsimen päästä päähän -palautustesti jäi testiselaimen työkaluaikakatkaisun vuoksi vahvistamatta; varmuuskopion validointi testattiin automaattisesti.
+Aiemman version 0.6.0 käyttö tarkistettiin Chromium-selaimessa: maalit ja kaksi syöttäjää, torjunnat, jäähyt, tilastot, kellon korjaus ja nollaraja, seuraava erä, uuden ottelun tyhjät kokoonpanot, arkiston säilyminen, kahden ikkunan ristiriidan esto, PNG-kuvakoosteen renderöinti ja JSON-vienti. Sen responsiivinen ulkoasu tarkistettiin 390 px:n ja 320 px:n levyisissä selainkehyksissä sekä työpöytäkoossa. Nämä historialliset tarkistukset eivät ole uuden version selaintestituloksia. Fyysistä iPhonea ei testattu. Tiedostovalitsimen päästä päähän -palautustesti jäi testiselaimen työkaluaikakatkaisun vuoksi vahvistamatta; varmuuskopion validointi testattiin automaattisesti.
 
 `tests/pwa-browser.mjs` on erillinen, valinnainen Playwright-integraatiotesti versiosta 0.5 siirtymiseen ja verkkoyhteyden katkaisuun. Se tarvitsee Playwrightin ja Chromiumin. Tätä testiä ei ajettu kehitysympäristössä, jossa paikallista selainbinääriä ei ollut saatavilla.
 
@@ -81,7 +99,7 @@ Kiekko-Espoon virallinen tunnus ja väripaletti ovat seuran omalta sivustolta. S
 
 ### EKS-kokoonpanot
 
-`rosters.json` sisältää vain sukunimet ja pelinumerot sekä ottelun ja ryhmän tiedot. Se on julkinen. Päivitä vain tätä tiedostoa seuraavan ottelutapahtuman yhteydessä. Uuden ottelun lomake hakee tiedoston verkosta ja käyttää offline-tilassa viimeisintä onnistuneesti ladattua kopiota päivämäärineen. Valittu kokoonpano kopioidaan otteluun; vanhoja otteluita ei muuteta. Sama numero eri ryhmissä on sallittu, ryhmän sisällä ei. Älä lisää etunimiä tai muita henkilötietoja.
+`rosters.json` sisältää vain sukunimet ja pelinumerot sekä ottelun ja ryhmän tiedot. Se on julkinen. Päivitä vain tätä tiedostoa seuraavan ottelutapahtuman yhteydessä. Sovellus hakee uudemman tiedoston taustalla verkkoyhteyden aikana ja käyttää offline-tilassa viimeisintä onnistuneesti ladattua kopiota päivämäärineen tai sovellukseen sisältyvää kokoonpanoa. Uuden ottelun lomake ei odota verkkohakua. Valittu kokoonpano kopioidaan otteluun; vanhoja otteluita ei muuteta. Sama numero eri ryhmissä on sallittu, ryhmän sisällä ei. Älä lisää etunimiä tai muita henkilötietoja.
 
 ### Offline ensin (0.6.2)
 Sovelluksen avaus käyttää asennettua versiota heti. Kokoonpano on mukana myös sovelluksen asennetussa varakopiossa; uudempi onnistuneesti haettu JSON säilytetään paikallisesti. Uuden ottelun lomake ei odota verkkoa eikä muuta valintaa taustapäivityksen aikana. Päivitykset vaativat verkon, ottelun kirjaaminen ei. Käyttäjä hyväksyy sovelluspäivityksen erikseen.

@@ -213,7 +213,7 @@ test('snapshot and next period are pure and preserve events and archive', () => 
   next.events[0].n = '9';
   next.archive[0].home = 'Muutos';
   assert.deepEqual(current, original);
-  assert.equal(VERSION, '0.6.2');
+  assert.equal(VERSION, '0.6.3');
 });
 
 test('new event validation enforces the three-event model and valid unique assistants', () => {
