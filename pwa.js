@@ -1,5 +1,5 @@
 /** Offline shell and explicit, non-disruptive update handling. No match data lives here. */
-export const APP_VERSION = '0.6.0';
+export const APP_VERSION = '0.6.1';
 
 const BASE_URL = new URL('./', import.meta.url);
 const STATUS_TIMEOUT_MS = 2000;

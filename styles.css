@@ -34,3 +34,5 @@
 .menu-item{font-size:14px}.menu-item small{font-size:12px}.comparison-label{font-size:13px}.comparison-head{font-size:14px}
 .archive-main h3{font-size:14px}.archive-main p{font-size:12px}.heading-label{font-size:12px}.text-button{font-size:13px}
 @media(max-width:680px){.team-name{font-size:12px}.action-label{font-size:16px}.clock-button{font-size:12px}.connection-indicator{font-size:0}.section-heading .eyebrow{font-size:9px}.action-hint{font-size:11px}.event-meta{font-size:11px}.view-footer{font-size:10px}.nav-item{font-size:11px}.board-top{padding-top:12px}.scoreline{padding-top:10px}.board-stats{gap:14px}.sheet-step{font-size:11px}.event-row{gap:8px}.event-time{min-width:40px}.event-symbol{width:30px;height:30px}.event-title{font-size:13px}.comparison-head{font-size:12px}.comparison-label{font-size:12px}.inline-form .button{padding-inline:13px}.number-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+.roster-preview{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.roster-preview-chip{border:1px solid #dce5f3;border-radius:8px;padding:5px 9px;background:#fff;color:#000032;font-size:12px;font-weight:650}

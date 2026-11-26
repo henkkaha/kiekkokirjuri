@@ -1,0 +1,107 @@
+{
+  "schema": 1,
+  "event": "GrIFK – EKS",
+  "updated": "2026-11-26",
+  "opponent": "GrIFK",
+  "side": "away",
+  "teams": [
+    {
+      "id": "blue",
+      "name": "Blue",
+      "players": [
+        [
+          58,
+          "Honkimaa"
+        ],
+        [
+          15,
+          "Haho"
+        ],
+        [
+          26,
+          "Jantunen"
+        ],
+        [
+          14,
+          "Niemelä"
+        ],
+        [
+          19,
+          "Pekkarinen"
+        ],
+        [
+          64,
+          "Laurila"
+        ]
+      ]
+    },
+    {
+      "id": "white",
+      "name": "White",
+      "players": [
+        [
+          61,
+          "Koponen"
+        ],
+        [
+          11,
+          "Schlosser"
+        ],
+        [
+          28,
+          "Kipinä"
+        ],
+        [
+          24,
+          "Kniazev"
+        ],
+        [
+          18,
+          "Suokko"
+        ],
+        [
+          98,
+          "Alho"
+        ],
+        [
+          88,
+          "Pyykkö"
+        ]
+      ]
+    },
+    {
+      "id": "yellow",
+      "name": "Yellow",
+      "players": [
+        [
+          17,
+          "Hannonen"
+        ],
+        [
+          28,
+          "Lehto"
+        ],
+        [
+          12,
+          "Nylund"
+        ],
+        [
+          36,
+          "Rämä"
+        ],
+        [
+          18,
+          "Tapioharju"
+        ],
+        [
+          91,
+          "Luukkanen"
+        ],
+        [
+          66,
+          "Heikel"
+        ]
+      ]
+    }
+  ]
+}

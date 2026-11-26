@@ -1,8 +1,8 @@
 import { VERSION, createGame, normalizeState, elapsed, elapsedPrecise, formatTime, score, teamStats,
   playerStats, periodStats, archiveAndNew, openArchive, validateEvent,
-  normalizeNumber, nextPeriod, snapshot } from './model.js?v=0.6.0';
-import { setupPWA, checkForUpdate } from './pwa.js?v=0.6.0';
-import { textReport, createPoster } from './reports.js?v=0.6.0';
+  normalizeNumber, nextPeriod, snapshot } from './model.js?v=0.6.1';
+import { setupPWA, checkForUpdate } from './pwa.js?v=0.6.1';
+import { textReport, createPoster } from './reports.js?v=0.6.1';
 
 const STORAGE_KEY = 'ke-match-v1';
 const $ = id => document.getElementById(id);
@@ -367,10 +367,40 @@ function submitEvent() {
   });
 }
 
+const ROSTER_CACHE='kiekkokirjuri-rosters-v1';
+function validateRoster(raw){if(raw.schema!==1||!Array.isArray(raw.teams)||typeof raw.event!=="string"||typeof raw.updated!=="string"||typeof raw.opponent!=="string"||!["home","away"].includes(raw.side))throw Error("Virheellinen kokoonpanotiedosto");let ids=new Set();for(const t of raw.teams){if(!/^[a-z0-9-]+$/.test(t.id)||ids.has(t.id)||typeof t.name!=="string"||!Array.isArray(t.players))throw Error("Virheellinen ryhmä");ids.add(t.id);let ns=new Set();for(const p of t.players){if(!Array.isArray(p)||p.length!==2||!Number.isInteger(p[0])||p[0]<0||p[0]>99||ns.has(p[0])||typeof p[1]!=="string"||!p[1].trim()||p[1].length>60)throw Error("Virheellinen tai toistuva pelaajanumero");ns.add(p[0])}}return raw}
+let rosterPresets=null;
+let rosterSource='';
+try {const raw=localStorage.getItem(ROSTER_CACHE);if(raw){rosterPresets=validateRoster(JSON.parse(raw));rosterSource='Tallennettu kopio';}}catch{}
+async function refreshRosterPresets(){
+  const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),3500);
+  try{const response=await fetch('./rosters.json',{cache:'no-store',signal:controller.signal});if(!response.ok)throw Error('Kokoonpano ei saatavilla');const data=validateRoster(await response.json());rosterPresets=data;rosterSource='Verkosta tarkistettu';try{localStorage.setItem(ROSTER_CACHE,JSON.stringify(data))}catch{}}
+  catch{rosterSource=rosterPresets?'Tallennettu kopio · tarkista ajantasaisuus':'Kokoonpanoa ei saatu ladattua';}
+  finally{clearTimeout(timer);}
+}
+function rosterOptions(data){return '<option value="">Tyhjä kokoonpano / käsin</option>'+(data?.teams||[]).map(t=>'<option value="'+escapeHTML(t.id)+'">EKS '+escapeHTML(t.name)+' · '+t.players.length+' pelaajaa</option>').join('')}
+function wireRosterForm(){
+  const form=$('new-game-form');if(!form)return;
+  let data=rosterPresets;const select=$('roster-preset'),side=$('roster-side'),preview=$('roster-preview'),status=$('roster-status');
+  form.rosterSnapshot=data;
+  function statusText(){status.textContent=data?data.event+' · '+data.updated+' · '+rosterSource:rosterSource||'Tarkistetaan kokoonpanoja…'}
+  function updatePreview(fillNames){
+    const t=data?.teams.find(t=>t.id===select.value);preview.textContent='';
+    side.disabled=!t;
+    if(!t)return;
+    if(fillNames){const own=side.value,other=own==='home'?'away':'home';$('new-'+own).value='EKS '+t.name;$('new-'+other).value=data.opponent;}
+    for(const [n,name] of t.players){const span=document.createElement('span');span.className='roster-preview-chip';span.textContent='#'+n+' '+name;preview.appendChild(span)}
+  }
+  select.innerHTML=rosterOptions(data);if(data)side.value=data.side;statusText();updatePreview(false);
+  select.addEventListener('change',()=>updatePreview(true));side.addEventListener('change',()=>updatePreview(true));
+  void refreshRosterPresets().then(()=>{if($('new-game-form')!==form)return;if(select.value){status.textContent+=' · Avaa lomake uudelleen tarkistaaksesi muutokset';return;}data=rosterPresets;form.rosterSnapshot=data;select.innerHTML=rosterOptions(data);if(data)side.value=data.side;statusText();updatePreview(false);});
+}
+void refreshRosterPresets();
 function showNewGame() {
   pending = null;
-  openSheet('Uusi ottelu','Uusi peli, puhdas tulostaulu.',`<div class="stack"><label class="field" for="new-home">Kotijoukkue<input id="new-home" name="home" value="${escapeHTML(state.home)}" maxlength="60" required></label><label class="field" for="new-away">Vierasjoukkue<input id="new-away" name="away" placeholder="Vastustajan nimi" maxlength="60"></label><div class="form-grid"><label class="field" for="new-length">Erän pituus, min<input id="new-length" name="length" type="number" inputmode="numeric" min="1" max="60" value="${state.periodLength/60}" required></label><label class="field" for="new-date">Ottelupäivä<input id="new-date" name="date" type="date" value="${localDate()}" required></label></div><div class="helper-box"><strong>Nykyinen ottelu siirtyy arkistoon.</strong><br>Uuden ottelun tulos, tapahtumat ja molempien joukkueiden kokoonpanot alkavat tyhjistä.</div></div>`,
+  openSheet('Uusi ottelu','Uusi peli, puhdas tulostaulu.',`<div class="stack"><div class="helper-box"><label class="field" for="roster-preset">EKS:n kokoonpano<select id="roster-preset" name="preset"></select></label><p class="field-note" id="roster-status"></p><label class="field" for="roster-side" style="margin-top:12px">EKS pelaa<select id="roster-side" name="presetSide" disabled><option value="home">Kotijoukkueena</option><option value="away">Vierasjoukkueena</option></select></label><div id="roster-preview" class="roster-preview"></div></div><label class="field" for="new-home">Kotijoukkue<input id="new-home" name="home" value="${escapeHTML(state.home)}" maxlength="60" required></label><label class="field" for="new-away">Vierasjoukkue<input id="new-away" name="away" placeholder="Vastustajan nimi" maxlength="60"></label><div class="form-grid"><label class="field" for="new-length">Erän pituus, min<input id="new-length" name="length" type="number" inputmode="numeric" min="1" max="60" value="${state.periodLength/60}" required></label><label class="field" for="new-date">Ottelupäivä<input id="new-date" name="date" type="date" value="${localDate()}" required></label></div><div class="helper-box"><strong>Nykyinen ottelu siirtyy arkistoon.</strong><br>Uuden ottelun tulos ja tapahtumat nollautuvat. Valittu EKS-kokoonpano kopioidaan uuteen otteluun; vastustajan pelaajat lisätään tarvittaessa käsin.</div></div>`,
     '<button class="button quiet" type="button" data-action="close-sheet">Peruuta</button><button class="button primary" type="submit">Luo ottelu</button>','new-game-form');
+  wireRosterForm();
 }
 function localDate() {
   const now = new Date();
@@ -387,13 +417,15 @@ function submitNewGame(form) {
   next.periodLength = minutes*60;
   next.date = new Date(String(data.get('date'))+'T12:00:00').toISOString();
   next.configured = true;
+  const presetId=String(data.get('preset')||'');
+  if(presetId){const preset=form.rosterSnapshot?.teams.find(t=>t.id===presetId);const side=String(data.get('presetSide'));if(!preset||!['home','away'].includes(side))throw new Error('Valitse kokoonpano uudelleen.');next.roster=preset.players.map(([n,name])=>({n:String(n),name,team:side}));next.rosterPreset={event:form.rosterSnapshot.event,updated:form.rosterSnapshot.updated,id:preset.id};}
   if(!persist(next)) return formError('Uutta ottelua ei voitu tallentaa.');
   closeSheet();
   viewAllEvents=false;
   navigate('ottelu');
   render();
   releaseWakeLock();
-  notify('Uusi ottelu valmis. Lisää kokoonpano Pelaajat-välilehdellä.');
+  notify(presetId?'Uusi ottelu ja EKS-kokoonpano valmis.':'Uusi ottelu valmis. Lisää kokoonpano Pelaajat-välilehdellä.');
 }
 function showMatchSettings(startAfter=false) {
   const canChangeLength = !state.events.length && !elapsed(state) && state.start===null && state.period===1;

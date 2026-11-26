@@ -4,7 +4,7 @@ Offline-ottelukirjuri Kiekko-Espoon väreissä. Julkaistu GitHub Pagesiin:
 
 **https://henkkaha.github.io/kiekkokirjuri/**
 
-Versio **0.6.0**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
+Versio **0.6.1**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
 
 ## Käyttö
 
@@ -64,7 +64,7 @@ node --check app.js
 
 25 automaattista testiä kattavat laukauslaskennan, pelaajan numeron 0, syöttäjät, vanhat varmuuskopiot, arkistojen eristyksen, kellon toistuvien pysäytysten tarkkuuden, raportit sekä offline-välimuistin ja päivityksen eheystarkistukset.
 
-Versio 0.6.0 tarkistettiin myös oikeassa Chromium-selaimessa: maalit ja kaksi syöttäjää, torjunnat, jäähyt, tilastot, kellon korjaus ja nollaraja, seuraava erä, uuden ottelun tyhjät kokoonpanot, arkiston säilyminen, kahden ikkunan ristiriidan esto, PNG-kuvakoosteen renderöinti ja JSON-vienti. Responsiivinen ulkoasu tarkistettiin 390 px:n ja 320 px:n levyisissä selainkehyksissä sekä työpöytäkoossa. Fyysistä iPhonea ei testattu. Tiedostovalitsimen päästä päähän -palautustesti jäi testiselaimen työkaluaikakatkaisun vuoksi vahvistamatta; varmuuskopion validointi testattiin automaattisesti.
+Versio 0.6.1 tarkistettiin myös oikeassa Chromium-selaimessa: maalit ja kaksi syöttäjää, torjunnat, jäähyt, tilastot, kellon korjaus ja nollaraja, seuraava erä, uuden ottelun tyhjät kokoonpanot, arkiston säilyminen, kahden ikkunan ristiriidan esto, PNG-kuvakoosteen renderöinti ja JSON-vienti. Responsiivinen ulkoasu tarkistettiin 390 px:n ja 320 px:n levyisissä selainkehyksissä sekä työpöytäkoossa. Fyysistä iPhonea ei testattu. Tiedostovalitsimen päästä päähän -palautustesti jäi testiselaimen työkaluaikakatkaisun vuoksi vahvistamatta; varmuuskopion validointi testattiin automaattisesti.
 
 `tests/pwa-browser.mjs` on erillinen, valinnainen Playwright-integraatiotesti versiosta 0.5 siirtymiseen ja verkkoyhteyden katkaisuun. Se tarvitsee Playwrightin ja Chromiumin. Tätä testiä ei ajettu kehitysympäristössä, jossa paikallista selainbinääriä ei ollut saatavilla.
 
@@ -78,3 +78,7 @@ Kiekko-Espoon virallinen tunnus ja väripaletti ovat seuran omalta sivustolta. S
 - [Virallinen PNG-tunnus](https://kiekko-espoo.fi/wp-content/themes/uudesti-syntynyt/img/logos/1368624751.png)
 - [Visuaalisen ilmeen uudistus](https://kiekko-espoo.fi/uudesti-syntyneena-liigaan/)
 - [IIHF:n tilastoraportti: SOG = G + SSG](https://stats.iihf.com/Hydra/415/IHM415000_85A_23_0.pdf)
+
+### EKS-kokoonpanot
+
+`rosters.json` sisältää vain sukunimet ja pelinumerot sekä ottelun ja ryhmän tiedot. Se on julkinen. Päivitä vain tätä tiedostoa seuraavan ottelutapahtuman yhteydessä. Uuden ottelun lomake hakee tiedoston verkosta ja käyttää offline-tilassa viimeisintä onnistuneesti ladattua kopiota päivämäärineen. Valittu kokoonpano kopioidaan otteluun; vanhoja otteluita ei muuteta. Sama numero eri ryhmissä on sallittu, ryhmän sisällä ei. Älä lisää etunimiä tai muita henkilötietoja.
