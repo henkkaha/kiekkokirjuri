@@ -1,4 +1,4 @@
-import { createTranslator } from './i18n.js?v=0.7.1';
+import { createTranslator } from './i18n.js?v=0.7.2';
 
 export const MODEL_MESSAGES = {
   'Ottelun tietoja ei voi lukea. Tarkista varmuuskopion muoto.': { en: 'Could not read the match data. Check the backup format.', sv: 'Matchuppgifterna kunde inte läsas. Kontrollera säkerhetskopians format.' },
@@ -14,6 +14,9 @@ export const MODEL_MESSAGES = {
   'Ottelussa on virheellinen tekstikenttä.': { en: 'The match contains an invalid text field.', sv: 'Matchen innehåller ett ogiltigt textfält.' },
   'Valitse koti- tai vierasjoukkue.': { en: 'Select the home or away team.', sv: 'Välj hemma- eller bortalaget.' },
   'Pelaajan numeron pitää olla kokonaisluku väliltä 0–99.': { en: 'The player number must be a whole number from 0 to 99.', sv: 'Spelarnumret måste vara ett heltal mellan 0 och 99.' },
+  'Ottelun maalivahtivalinnat eivät ole kelvolliset.': { en: 'The match contains invalid goalkeeper selections.', sv: 'Matchen innehåller ogiltiga målvaktsval.' },
+  'Valitse maalivahti tai kirjaa ilman numeroa.': { en: 'Choose a goalkeeper or record without a number.', sv: 'Välj en målvakt eller registrera utan nummer.' },
+  'Valitse maalivahti ennen torjunnan kirjaamista.': { en: 'Choose a goalkeeper before recording a save.', sv: 'Välj en målvakt innan du registrerar en räddning.' },
   'Rangaistusminuuttien pitää olla kokonaisluku väliltä 0–1000.': { en: 'Penalty minutes must be a whole number from 0 to 1000.', sv: 'Utvisningsminuterna måste vara ett heltal mellan 0 och 1000.' },
   'Varmuuskopion pitää sisältää ottelun tiedot.': { en: 'The backup must contain match data.', sv: 'Säkerhetskopian måste innehålla matchuppgifter.' },
   'Varmuuskopiosta puuttuu kelvollinen pelaaja- tai tapahtumalista.': { en: 'The backup is missing a valid player or event list.', sv: 'Säkerhetskopian saknar en giltig lista över spelare eller händelser.' },

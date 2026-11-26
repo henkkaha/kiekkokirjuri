@@ -1,4 +1,4 @@
-import { createTranslator } from './i18n.js?v=0.7.1';
+import { createTranslator } from './i18n.js?v=0.7.2';
 
 /** Display labels only. Stored event types, penalty IDs and reasons stay unchanged.
  * Hockey terminology checked against the IIHF rulebook and Svenska

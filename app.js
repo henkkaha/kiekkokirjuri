@@ -1,15 +1,15 @@
 import { VERSION, createGame, normalizeState, elapsed, elapsedPrecise, formatTime, score, teamStats,
   playerStats, periodStats, archiveAndNew, openArchive, validateEvent,
-  normalizeNumber, nextPeriod, snapshot } from './model.js?v=0.7.1';
-import { setupPWA, checkForUpdate, refreshPWALanguage } from './pwa.js?v=0.7.1';
-import { textReport, createPoster } from './reports.js?v=0.7.1';
-import { renderHelp } from './help.js?v=0.7.1';
+  normalizeNumber, nextPeriod, snapshot, getActiveGoalie, setActiveGoalie, recordSave } from './model.js?v=0.7.2';
+import { setupPWA, checkForUpdate, refreshPWALanguage } from './pwa.js?v=0.7.2';
+import { textReport, createPoster } from './reports.js?v=0.7.2';
+import { renderHelp } from './help.js?v=0.7.2';
 import { FEEDBACK_STORAGE_KEY, FEEDBACK_KINDS, getFeedbackKinds, FEEDBACK_LIMITS, createFeedbackDraft,
-  normalizeFeedbackDraft, validateFeedbackDraft, buildFeedbackEmail } from './feedback.js?v=0.7.1';
+  normalizeFeedbackDraft, validateFeedbackDraft, buildFeedbackEmail } from './feedback.js?v=0.7.2';
 
-import { LANGUAGE_STORAGE_KEY, LANGUAGES, getLanguage, getLocale, resolveLanguage, setLanguage } from './i18n.js?v=0.7.1';
-import { uiText as tr } from './ui-messages.js?v=0.7.1';
-import { domainText } from './domain-messages.js?v=0.7.1';
+import { LANGUAGE_STORAGE_KEY, LANGUAGES, getLanguage, getLocale, resolveLanguage, setLanguage } from './i18n.js?v=0.7.2';
+import { uiText as tr } from './ui-messages.js?v=0.7.2';
+import { domainText } from './domain-messages.js?v=0.7.2';
 
 let savedLanguage = null;
 try { savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY); } catch { /* Language remains usable in memory. */ }
@@ -74,6 +74,7 @@ let view = ['ottelu','pelaajat','tilastot','ottelut'].includes(location.hash.sli
 let rosterTeam = 'home';
 let statsTeam = 'home';
 let pending = null;
+let goalieSelection = null;
 let editingPlayer = null;
 let confirmAction = null;
 let reportGame = null;
@@ -254,6 +255,7 @@ function teamTabs(selected, action) {
 function renderRoster() {
   const roster = state.roster.filter(p=>p.team===rosterTeam).sort((a,b)=>Number(a.n)-Number(b.n));
   return `${heading(tr("Pelaajat"),tr("Tämän ottelun kokoonpano"),`<span class="count-badge">${state.roster.length}</span>`)}<div class="two-column"><section class="panel content-panel">${teamTabs(rosterTeam,'roster-team')}
+    <div class="goalie-roster-card">${icon('save')}<div><span>${tr("Maalivahti tässä ottelussa")}</span><strong>${escapeHTML(goalieLabel(rosterTeam))}</strong></div><button class="button" type="button" data-action="change-goalie" data-team="${rosterTeam}">${getActiveGoalie(state,rosterTeam)===null?tr("Valitse maalivahti"):tr("Vaihda maalivahti")}</button></div>
     <form id="add-player-form" class="inline-form"><label class="field" for="player-number">${tr("Numero")}<input id="player-number" name="n" inputmode="numeric" pattern="[0-9]{1,2}" maxlength="2" placeholder="00" required autocomplete="off"></label><label class="field" for="player-name">${tr("Sukunimi")}<input id="player-name" name="name" placeholder="${tr("Valinnainen")}" maxlength="60" autocomplete="off"></label><button class="button primary" type="submit">${tr("Lisää")}</button></form>
     <p class="roster-info">${tr("Pelkkä numero riittää. Nimen voi lisätä nyt tai myöhemmin pelaajaa napauttamalla.")}</p><div id="roster-error" class="form-error" role="alert" hidden></div>
     ${roster.length?`<div class="roster-grid">${roster.map(p=>`<button class="roster-player" data-action="edit-player" data-number="${p.n}" data-team="${rosterTeam}" aria-label="${escapeHTML(tr('Muokkaa pelaajaa {player}',{player:jerseyName(p.n,rosterTeam)}))}"><span class="roster-number">${p.n}</span><span class="roster-name">${escapeHTML(p.name||tr("Lisää nimi"))}<small>${p.name?tr("Pelaaja"):tr("Nimi puuttuu")}</small></span></button>`).join('')}</div>`:empty('people',tr("Ketkä pelaavat tänään?"),tr("Lisää joukkueen pelaajanumerot. Saat niistä nopeat valintapainikkeet tapahtumiin."))}
@@ -297,6 +299,7 @@ function closeSheet() {
   sheetToken++;
   $('sheet').close();
   pending = null;
+  goalieSelection = null;
   editingPlayer = null;
   confirmAction = null;
   if (posterURL) { URL.revokeObjectURL(posterURL); posterURL=null; }
@@ -333,6 +336,7 @@ function beginEvent(type, existing=null) {
   pending = existing ? clone(existing) : {type,team:'',time:elapsed(state),period:state.period,n:'',assists:[],minutes:2,reason:'',penaltyType:'minor',penaltyLabel:penaltyTypes[0].label,detail:''};
   pending.assists ||= [];
   pending._editing = Boolean(existing);
+  pending._gameId = state.id;
   if (existing?.type==='Jäähy' && !existing.penaltyType) pending.penaltyType='custom';
   drawEvent();
 }
@@ -341,6 +345,7 @@ function drawEvent(preservePosition=false) {
   const p = pending;
   const subtitle = tr('{period}. erä · kellossa {time}',{period:p.period,time:formatTime(Math.max(0,state.periodLength-p.time))})+(p._editing?' · '+tr('Muokkaus'):'');
   if (!p.team) {
+    if(p.type==='Torjunta'&&!p._editing) { drawSaveChoices(subtitle); return; }
     const question = p.type==='Torjunta'?tr("Kumpi joukkue torjui?"):p.type==='Maali'?tr("Kumpi joukkue teki maalin?"):tr("Kummalle joukkueelle jäähy?");
     openSheet(domainText(p.type),subtitle,`<div class="sheet-step"><span>${tr("01 Joukkue")}</span>${icon('arrow')}<span>${tr("02 Pelaaja ja tiedot")}</span></div><h3 style="margin-bottom:16px">${question}</h3><div class="choice-grid">${['home','away'].map(t=>`<button type="button" class="choice" data-action="event-team" data-team="${t}">${escapeHTML(displayTeam(state,t))}<small>${teamLabel(t)}</small></button>`).join('')}</div>${p.type==='Torjunta'?`<p class="assist-help">${tr("Valitse torjuneen maalivahdin joukkue. Vastustajalle lisätään samalla laukaus maalia kohti.")}</p>`:''}`);
     return;
@@ -363,6 +368,76 @@ function drawEvent(preservePosition=false) {
   }
   body += `<details class="sheet-section" style="margin-top:22px"><summary class="small muted" style="cursor:pointer;padding:8px 0">${tr("Korjaa tapahtuma-aikaa")}</summary><div class="form-grid" style="margin-top:12px"><label class="field" for="event-period">${tr("Erä")}<input id="event-period" type="number" inputmode="numeric" min="1" max="1000" value="${p.period}" data-pending="period"></label><label class="field" for="event-time">${tr("Kulunut eräaika")}<input id="event-time" inputmode="numeric" value="${formatTime(p.time)}" placeholder="mm:ss" data-pending="time"></label></div><p class="event-time-note">${tr("Aikaleima otetaan tapahtumapainikkeen painalluksesta. Tässä näkyy kulunut eräaika; tulostaulun kello laskee alaspäin.")}</p></details>`;
   openSheet(p._editing?tr('Muokkaa: {event}',{event:domainText(p.type)}):domainText(p.type),subtitle,body,`${p._editing?`<button type="button" class="button danger" data-action="delete-event" data-id="${escapeHTML(p.id)}" aria-label="${tr("Poista tapahtuma")}">${icon('trash')}</button>`:`<button type="button" class="button quiet" data-action="close-sheet">${tr("Peruuta")}</button>`}<button type="submit" class="button primary" id="save-event">${icon('check')}${p._editing?tr("Tallenna muutokset"):tr('Tallenna {event}',{event:domainText(p.type).toLocaleLowerCase(getLocale())})}</button>`,'event-form',preservePosition);
+}
+
+function goalieLabel(team, game=state) {
+  const number = getActiveGoalie(game,team);
+  return number===null?tr("Maalivahti valitsematta"):number===''?tr("Ilman numeroa"):jerseyName(number,team,game);
+}
+function drawSaveChoices(subtitle) {
+  openSheet(domainText("Torjunta"),subtitle,`<h3 class="save-question">${tr("Kumpi joukkue torjui?")}</h3><div class="save-team-grid">${['home','away'].map(team=>{
+    const chosen = getActiveGoalie(state,team)!==null;
+    return `<section class="save-team-card"><button type="button" class="save-team" data-action="event-team" data-team="${team}" aria-label="${escapeHTML(tr(chosen?'Kirjaa torjunta: {team}':'Valitse maalivahti: {team}',{team:displayTeam(state,team)}))}"><span class="save-team-side">${teamLabel(team)}</span><strong>${escapeHTML(displayTeam(state,team))}</strong><span class="save-goalie">${icon('save')}${escapeHTML(goalieLabel(team))}</span><span class="save-callout">${chosen?tr("Kirjaa torjunta"):tr("Valitse maalivahti")}${icon('arrow')}</span></button>${chosen?`<button class="save-goalie-change" type="button" data-action="change-goalie" data-team="${team}" aria-label="${escapeHTML(tr('Vaihda maalivahti: {team}',{team:displayTeam(state,team)}))}">${icon('edit')}${tr("Vaihda maalivahti")}</button>`:''}</section>`;
+  }).join('')}</div><p class="assist-help">${tr("Torjunta tallentuu heti joukkueen painalluksesta, kun maalivahti on valittu.")}</p><p class="assist-help">${tr("Valitse torjuneen maalivahdin joukkue. Vastustajalle lisätään samalla laukaus maalia kohti.")}</p>`);
+}
+function selectEventTeam(team) {
+  if(!pending||!['home','away'].includes(team)) return;
+  pending.team=team;
+  if(pending.type==='Torjunta'&&!pending._editing) {
+    if(getActiveGoalie(state,team)===null) showGoaliePicker(team,true);
+    else commitQuickSave(pending);
+  } else drawEvent();
+}
+function showGoaliePicker(team, recordPending=false) {
+  if(!['home','away'].includes(team)) return;
+  const saveEvent = pending?.type==='Torjunta'&&!pending._editing?clone(pending):null;
+  goalieSelection = {
+    team,gameId:state.id,
+    saveEvent:recordPending?saveEvent:null,
+    resumeEvent:!recordPending?saveEvent:null,
+    draftInputs:['player-number','player-name'].map(id=>[id,$(id)?.value]),
+  };
+  const selected = getActiveGoalie(state,team);
+  const roster = state.roster.filter(player=>player.team===team).sort((a,b)=>Number(a.n)-Number(b.n));
+  if(selected!==null&&selected!==''&&!roster.some(player=>player.n===selected)) roster.push({n:selected,name:''});
+  const recording = Boolean(goalieSelection.saveEvent);
+  const title = selected===null?tr("Valitse maalivahti"):tr("Vaihda maalivahti");
+  const body = `<p class="goalie-picker-intro">${recording?tr("Valitse maalivahti kerran. Tämä torjunta kirjataan samalla."):tr("Valinta koskee seuraavia torjuntoja. Aiemmat kirjaukset säilyvät ennallaan.")}</p>${roster.length?`<div class="number-grid goalie-number-grid">${roster.map(player=>`<button type="button" class="number-chip${selected===player.n?' selected':''}" data-action="pick-goalie" data-number="${player.n}" aria-label="${escapeHTML(jerseyName(player.n,team))}" aria-pressed="${selected===player.n}"><b>${player.n}</b><small>${escapeHTML(player.name||tr("Numero"))}</small></button>`).join('')}</div>`:''}<label class="field goalie-manual" for="goalie-number">${tr("Maalivahdin numero")}<input id="goalie-number" name="number" inputmode="numeric" pattern="[0-9]{1,2}" maxlength="2" placeholder="0–99" required autocomplete="off"></label><button type="button" class="button quiet wide goalie-unknown" data-action="pick-goalie" data-number="">${recording?tr("Kirjaa ilman numeroa"):tr("Jatka ilman numeroa")}</button><p class="assist-help">${tr("Valinta muistetaan tämän ottelun ajan. Voit vaihtaa maalivahdin tästä tai Pelaajat-näkymästä.")}</p>`;
+  openSheet(title,displayTeam(state,team),body,`<button type="button" class="button quiet" data-action="goalie-back"${saveEvent?` aria-label="${tr("Palaa joukkueen valintaan")}"`:''}>${saveEvent?tr("Takaisin"):tr("Peruuta")}</button><button class="button primary" type="submit">${recording?tr("Valitse ja kirjaa torjunta"):tr("Valitse")}</button>`,'goalie-form');
+}
+function backFromGoaliePicker() {
+  const resume = goalieSelection?.saveEvent||goalieSelection?.resumeEvent;
+  goalieSelection=null;
+  if(resume) {pending=resume;pending.team='';drawEvent();}
+  else closeSheet();
+}
+function commitGoalieChoice(number) {
+  const selection = goalieSelection;
+  if(!selection) return;
+  if(selection.gameId!==state.id) throw new Error(tr("Ottelu vaihtui. Muokkaa kirjausta otteluarkiston kautta."));
+  const next = setActiveGoalie(state,selection.team,number);
+  if(selection.saveEvent) {commitQuickSave(selection.saveEvent,next);return;}
+  if(!persist(next)) {if(!externalConflict)formError(tr("Kirjausta ei voitu tallentaa. Tarkista ilmoitus sivun yläreunassa."));return;}
+  const resume=selection.resumeEvent;
+  goalieSelection=null;
+  if(resume) {pending=resume;pending.team='';render();drawEvent();}
+  else {closeSheet();render();}
+  for(const [id,value] of selection.draftInputs) if(value!==undefined&&$(id)) $(id).value=value;
+  notify(tr('Maalivahti valittu · {team} · {goalie}',{team:displayTeam(state,selection.team),goalie:goalieLabel(selection.team)}));
+}
+function commitQuickSave(eventInput, game=state) {
+  if(!eventInput||eventInput._editing) return;
+  if(eventInput._gameId!==state.id) throw new Error(tr("Ottelu vaihtui. Muokkaa kirjausta otteluarkiston kautta."));
+  const gameId=state.id;
+  const next=recordSave(game,{team:eventInput.team,time:eventInput.time,period:eventInput.period});
+  const event=next.events[next.events.length-1];
+  if(!persist(next)) {if(!externalConflict)formError(tr("Kirjausta ei voitu tallentaa. Tarkista ilmoitus sivun yläreunassa."));return;}
+  closeSheet();
+  render();
+  notify(tr('Torjunta kirjattu · {team} · {goalie}',{team:displayTeam(state,event.team),goalie:goalieLabel(event.team)}),()=>{
+    if(state.id!==gameId) return notify(tr("Ottelu vaihtui. Muokkaa kirjausta otteluarkiston kautta."));
+    mutate(game=>{game.events=game.events.filter(item=>item.id!==event.id);});
+  });
 }
 
 function pickPlayer(number) {
@@ -851,7 +926,10 @@ document.addEventListener('click',async event=>{
       case 'confirm':if(confirmAction)confirmAction();break;
       case 'undo':{const undo=undoAction;$('toast').hidden=true;undoAction=null;if(undo)undo();break;}
       case 'event':if(state.finished){notify(tr("Jatka ottelua ennen uuden tapahtuman kirjaamista."));break;}beginEvent(type);break;
-      case 'event-team':pending.team=team;drawEvent();break;
+      case 'event-team':selectEventTeam(team);break;
+      case 'change-goalie':showGoaliePicker(team);break;
+      case 'pick-goalie':commitGoalieChoice(number);break;
+      case 'goalie-back':backFromGoaliePicker();break;
       case 'change-event-team':pending.team='';pending.n='';pending.assists=[];drawEvent();break;
       case 'pick-player':pickPlayer(number);break;
       case 'manual-player':pickPlayer($('manual-number').value);break;
@@ -898,6 +976,7 @@ document.addEventListener('submit',event=>{
   try {
     switch(form.id) {
       case 'event-form':submitEvent();break;
+      case 'goalie-form':{const number=String(new FormData(form).get('number')??'').trim();if(number==='')throw new Error(tr("Valitse numero väliltä 0–99 tai jatka ilman numeroa."));commitGoalieChoice(number);break;}
       case 'feedback-form':prepareFeedback();break;
       case 'new-game-form':submitNewGame(form);break;
       case 'settings-form':submitSettings(form);break;

@@ -134,3 +134,30 @@ html{scroll-padding-top:calc(var(--safe-area-top) + var(--header-row-height) + 1
   }
 }
 @media(max-width:380px){:root{--page-gutter:13px}}
+
+/* Saves need only a team tap once each team's goalkeeper has been chosen. */
+.save-question{font-size:19px;margin-bottom:18px}
+.save-team-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.save-team-card{display:flex;flex-direction:column;min-width:0;overflow:hidden;border:1px solid #dce5f3;border-radius:18px;background:#f4f7fd}
+.save-team{flex:1;width:100%;min-height:190px;padding:18px 14px;display:flex;flex-direction:column;align-items:flex-start;gap:10px;text-align:left;color:var(--navy);background:transparent;overflow-wrap:anywhere}
+.save-team:hover,.save-team:active{background:#e8f0ff}
+.save-team:focus-visible,.save-goalie-change:focus-visible{outline-offset:-4px}
+.save-team-side{font-size:11px;line-height:1.4;color:#61708d}
+.save-team>strong{font-size:18px;line-height:1.3}
+.save-goalie{display:flex;align-items:center;gap:6px;font-size:13px;line-height:1.5;color:#4b5b78}
+.save-goalie svg{width:18px;height:18px}
+.save-callout{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;margin-top:auto;padding-top:8px;color:var(--blue);font-size:13px;font-weight:750;line-height:1.4}
+.save-callout svg{width:17px;height:17px}
+.save-goalie-change{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;min-height:48px;padding:10px 12px;border-top:1px solid #dce5f3;background:#fff;color:#52627d;font-size:12px;font-weight:650;line-height:1.4}
+.save-goalie-change svg{width:16px;height:16px}
+.goalie-picker-intro{font-size:14px;line-height:1.7;color:#52627d;margin-bottom:20px}
+.goalie-number-grid{margin-bottom:20px}
+.goalie-manual{margin-top:12px}
+.goalie-unknown{margin-top:12px;white-space:normal}
+.goalie-roster-card{display:flex;align-items:center;gap:12px;margin:20px 0;padding:16px;background:#f2f6fd;border:1px solid #dce5f3;border-radius:15px}
+.goalie-roster-card>svg{color:var(--blue)}
+.goalie-roster-card>div{min-width:0;flex:1}
+.goalie-roster-card span{display:block;font-size:12px;line-height:1.5;color:#61708d}
+.goalie-roster-card strong{display:block;margin-top:4px;font-size:15px;line-height:1.5;overflow-wrap:anywhere}
+.goalie-roster-card .button{white-space:normal;font-size:12px;line-height:1.4}
+@media(max-width:680px){.goalie-roster-card{flex-wrap:wrap}.goalie-roster-card .button{width:100%;min-height:44px}.save-team>strong{font-size:16px}}

@@ -1,4 +1,4 @@
-import { createTranslator } from './i18n.js?v=0.7.1';
+import { createTranslator } from './i18n.js?v=0.7.2';
 
 export const UI_MESSAGES = {
   "Kotijoukkue": {
@@ -1448,6 +1448,94 @@ export const UI_MESSAGES = {
   "Ottelukooste: {home} vastaan {away}": {
     "en": "Match summary: {home} vs {away}",
     "sv": "Matchsammanfattning: {home} mot {away}"
+  },
+  "Maalivahti valitsematta": {
+    "en": "No goalkeeper selected",
+    "sv": "Ingen målvakt vald"
+  },
+  "Ilman numeroa": {
+    "en": "No number",
+    "sv": "Utan nummer"
+  },
+  "Valitse maalivahti": {
+    "en": "Choose goalkeeper",
+    "sv": "Välj målvakt"
+  },
+  "Vaihda maalivahti": {
+    "en": "Change goalkeeper",
+    "sv": "Byt målvakt"
+  },
+  "Kirjaa torjunta": {
+    "en": "Record save",
+    "sv": "Registrera räddning"
+  },
+  "Kirjaa torjunta: {team}": {
+    "en": "Record save: {team}",
+    "sv": "Registrera räddning: {team}"
+  },
+  "Vaihda maalivahti: {team}": {
+    "en": "Change goalkeeper: {team}",
+    "sv": "Byt målvakt: {team}"
+  },
+  "Valitse maalivahti: {team}": {
+    "en": "Choose goalkeeper: {team}",
+    "sv": "Välj målvakt: {team}"
+  },
+  "Torjunta tallentuu heti joukkueen painalluksesta, kun maalivahti on valittu.": {
+    "en": "Once a goalkeeper is selected, tapping the team records the save immediately.",
+    "sv": "När en målvakt är vald registreras räddningen direkt när du trycker på laget."
+  },
+  "Valitse maalivahti kerran. Tämä torjunta kirjataan samalla.": {
+    "en": "Choose the goalkeeper once. This also records the save.",
+    "sv": "Välj målvakt en gång. Den här räddningen registreras samtidigt."
+  },
+  "Valinta koskee seuraavia torjuntoja. Aiemmat kirjaukset säilyvät ennallaan.": {
+    "en": "This choice applies to future saves. Earlier entries stay unchanged.",
+    "sv": "Valet gäller kommande räddningar. Tidigare registreringar ändras inte."
+  },
+  "Valinta muistetaan tämän ottelun ajan. Voit vaihtaa maalivahdin tästä tai Pelaajat-näkymästä.": {
+    "en": "This choice is remembered for this match. Change the goalkeeper here or in Players.",
+    "sv": "Valet sparas för den här matchen. Du kan byta målvakt här eller under Spelare."
+  },
+  "Valitse ja kirjaa torjunta": {
+    "en": "Select and record save",
+    "sv": "Välj och registrera räddning"
+  },
+  "Maalivahdin numero": {
+    "en": "Goalkeeper number",
+    "sv": "Målvaktens nummer"
+  },
+  "Kirjaa ilman numeroa": {
+    "en": "Record without a number",
+    "sv": "Registrera utan nummer"
+  },
+  "Jatka ilman numeroa": {
+    "en": "Continue without a number",
+    "sv": "Fortsätt utan nummer"
+  },
+  "Torjunta kirjattu · {team} · {goalie}": {
+    "en": "Save recorded · {team} · {goalie}",
+    "sv": "Räddning registrerad · {team} · {goalie}"
+  },
+  "Maalivahti valittu · {team} · {goalie}": {
+    "en": "Goalkeeper selected · {team} · {goalie}",
+    "sv": "Målvakt vald · {team} · {goalie}"
+  },
+  "Valitse numero väliltä 0–99 tai jatka ilman numeroa.": {
+    "en": "Choose a number from 0–99 or continue without a number.",
+    "sv": "Välj ett nummer mellan 0 och 99 eller fortsätt utan nummer."
+  },
+  "Palaa joukkueen valintaan": {
+    "en": "Back to team selection",
+    "sv": "Tillbaka till lagval"
+  },
+  "Maalivahti tässä ottelussa": {
+    "en": "Goalkeeper for this match",
+    "sv": "Målvakt i den här matchen"
+  },
+  "Vaihto ei kirjaa torjuntaa.": {
+    "en": "Changing the goalkeeper does not record a save.",
+    "sv": "Ett målvaktsbyte registrerar ingen räddning."
   }
 };
 

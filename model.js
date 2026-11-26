@@ -1,7 +1,7 @@
-import { modelText } from './model-messages.js?v=0.7.1';
+import { modelText } from './model-messages.js?v=0.7.2';
 
 /** The storage shape deliberately stays compatible with ke-match-v1 backups. */
-export const VERSION = '0.7.1';
+export const VERSION = '0.7.2';
 
 const DEFAULT_LENGTH = 20 * 60;
 const NEW_EVENT_TYPES = new Set(['Maali', 'Torjunta', 'Jäähy']);
@@ -90,6 +90,49 @@ export function normalizeNumber(input) {
   return String(Number(value));
 }
 
+/** null asks once, an empty string deliberately records saves without a number. */
+function normalizeActiveGoalies(value) {
+  if (value === undefined) return { home: null, away: null };
+  if (!record(value) || Object.keys(value).some(key => !TEAMS.has(key))) {
+    throw new Error(modelText('Ottelun maalivahtivalinnat eivät ole kelvolliset.'));
+  }
+  return Object.fromEntries([...TEAMS].map(side => {
+    const number = own(value, side) ? value[side] : null;
+    return [side, number === null || number === undefined ? null : normalizeNumber(number)];
+  }));
+}
+
+/** The active goalkeeper is independent for each team and never inferred from old events. */
+export function getActiveGoalie(game, side) {
+  return normalizeActiveGoalies(game?.activeGoalies)[team(side)];
+}
+
+/** Only future saves use this choice; existing events retain their original goalkeeper. */
+export function setActiveGoalie(game, side, number) {
+  const selectedTeam = team(side);
+  if (number === undefined) throw new Error(modelText('Valitse maalivahti tai kirjaa ilman numeroa.'));
+  const selectedNumber = number === null ? null : normalizeNumber(number);
+  const next = copy(game);
+  next.activeGoalies = { ...normalizeActiveGoalies(game.activeGoalies), [selectedTeam]: selectedNumber };
+  if (selectedNumber !== null && selectedNumber !== ''
+      && !next.roster.some(player => player.team === selectedTeam && player.n === selectedNumber)) {
+    next.roster.push({ n: selectedNumber, name: '', team: selectedTeam });
+  }
+  return next;
+}
+
+/** Capture time/period at the initial tap and pass them through unchanged here. */
+export function recordSave(game, { team: side, time, period } = {}) {
+  const selectedTeam = team(side);
+  const number = getActiveGoalie(game, selectedTeam);
+  if (number === null) throw new Error(modelText('Valitse maalivahti ennen torjunnan kirjaamista.'));
+  const next = setActiveGoalie(game, selectedTeam, number);
+  const event = validateEvent({ type: 'Torjunta', team: selectedTeam, n: number, assists: [], time, period }, game);
+  claimId(event, new Set([game.id, ...game.events.map(item => item.id)]), 'event');
+  next.events.push(event);
+  return next;
+}
+
 function penaltyMinutes(value, fallback = 2) {
   let result = numeric(value, fallback, 'Rangaistusminuutit');
   // v0.5 used 2.01 as the selection value for a two-minute bench minor.
@@ -105,7 +148,7 @@ export function createGame({ home = 'Kiekko-Espoo', away = 'Vastustaja', periodL
     id: newId(), date: new Date().toISOString(), version: VERSION,
     home: text(home) || 'Kiekko-Espoo', away: text(away) || 'Vastustaja',
     period: 1, periodLength: periodLength(length), seconds: 0, start: null,
-    roster: [], events: [], archive: []
+    roster: [], events: [], archive: [], activeGoalies: { home: null, away: null }
   };
 }
 
@@ -136,6 +179,7 @@ export function normalizeState(raw) {
     game.start = game.start === undefined || game.start === null || game.start === '' || game.start === false
       ? null : numeric(game.start, null, 'Kellon aloitusaika');
     if (game.start !== null && game.start < 0) throw new Error(modelText('Kellon aloitusaika ei ole kelvollinen.'));
+    game.activeGoalies = normalizeActiveGoalies(source.activeGoalies);
 
     game.roster = source.roster.map(player => {
       if (!record(player)) throw new Error(modelText('Varmuuskopiossa on virheellinen pelaaja.'));
@@ -300,9 +344,10 @@ function meaningful(game, now) {
   if (game.events.length > 0 || game.roster.length > 0 || elapsedPrecise(game, now) > 0
     || game.start !== null || game.period > 1 || game.away !== 'Vastustaja'
     || game.finished === true || game.status === 'finished'
-    || Boolean(game.notes || game.title || game.detail)) return true;
+    || Boolean(game.notes || game.title || game.detail)
+    || [...TEAMS].some(side => getActiveGoalie(game, side) !== null)) return true;
   const standard = new Set(['id', 'date', 'version', 'home', 'away', 'period', 'periodLength',
-    'seconds', 'start', 'roster', 'events', 'archive', 'finished', 'status']);
+    'seconds', 'start', 'roster', 'events', 'archive', 'finished', 'status', 'activeGoalies']);
   // Unknown backup metadata can also contain the only work entered into a match.
   return Object.entries(game).some(([key, value]) => !standard.has(key)
     && (Array.isArray(value) ? value.length > 0 : record(value)

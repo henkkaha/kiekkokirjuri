@@ -13,7 +13,7 @@ export const HELP_COPY = {
     },
     {
       "title": "Kirjaa tilanne.",
-      "body": "Valitse Maali, Torjunta tai Jäähy, sitten joukkue ja pelaaja. Tallenna."
+      "body": "Valitse tapahtuma ja joukkue. Torjunta tallentuu heti, kun maalivahti on valittu kerran. Maalille ja jäähylle täytä tiedot ja tallenna."
     }
   ],
   "feedbackTitle": "Tehdään tästä parempi.",
@@ -30,7 +30,8 @@ export const HELP_COPY = {
       "paragraphs": [
         "<strong>Uusi ottelu</strong> -lomakkeessa voit valita valmiin EKS-ryhmän. Tarkista kokoonpanon ottelu ja päivämäärä sekä se, pelaako EKS kotona vai vieraissa. Voit myös aloittaa tyhjillä pelaajalistoilla.",
         "Valitse <strong>Pelaajat</strong>-välilehdellä ensin joukkue ja lisää pelinumerot. Numero 0 käy myös. Sukunimi on valinnainen, ja sen voi täydentää pelaajaa napauttamalla.",
-        "Tapahtumaan kirjoitettu uusi numero lisätään tämän ottelun kokoonpanoon. Molemmilla joukkueilla voi olla sama numero."
+        "Tapahtumaan kirjoitettu uusi numero lisätään tämän ottelun kokoonpanoon. Molemmilla joukkueilla voi olla sama numero.",
+        "Pelaava maalivahti valitaan kummallekin joukkueelle erikseen. Voit tehdä valinnan <strong>Pelaajat</strong>-välilehdellä tai ensimmäisen torjunnan yhteydessä. Valinta säilyy erien välillä ja sovelluksen sulkemisen jälkeen myös ilman nettiä."
       ]
     },
     {
@@ -45,7 +46,9 @@ export const HELP_COPY = {
       "title": "Maalit, torjunnat ja jäähyt",
       "paragraphs": [
         "<strong>Maali:</strong> valitse maalin tehnyt joukkue, maalintekijä ja halutessasi enintään kaksi syöttäjää. Pelaajan voi jättää avoimeksi ja täydentää myöhemmin.",
-        "<strong>Torjunta:</strong> valitse torjuneen maalivahdin joukkue ja maalivahti. Vastustajalle lisätään samalla yksi laukaus maalia kohti.",
+        "<strong>Torjunta:</strong> valitse torjuneen maalivahdin joukkue. Ensimmäisellä kerralla valitse maalivahdin numero kokoonpanosta tai kirjoita se itse. Voit myös kirjata ilman numeroa.",
+        "Kun maalivahti on valittu, <strong>Torjunta → joukkue</strong> tallentaa seuraavan torjunnan heti. Vastustajalle lisätään samalla yksi laukaus maalia kohti. Joukkueiden maalivahtivalinnat ovat erilliset.",
+        "<strong>Vaihda maalivahti</strong> löytyy torjunnan joukkuevalinnasta. Maalivahdin voi vaihtaa myös <strong>Pelaajat</strong>-välilehdellä. Vaihto vaikuttaa seuraaviin torjuntoihin; aiempia kirjauksia korjataan tapahtumarivin kynästä.",
         "<div class=\"help-formula\"><strong>Laukaukset maalia kohti</strong><span>omat maalit + vastustajan torjunnat</span></div>",
         "Maali lisää myös laukauksen tehneelle joukkueelle. Ohi menneitä ja blokattuja laukauksia ei kirjata näihin lukuihin.",
         "<strong>Jäähy:</strong> valitse rangaistuksen saanut joukkue ja pelaaja, syy sekä rangaistuksen tyyppi. Tarvittaessa valitse <strong>Muu rangaistus / oma minuuttimäärä</strong>. Sovellus kirjaa rangaistukset, mutta ei laske niiden päättymistä pelitilanteen mukaan."
@@ -62,7 +65,7 @@ export const HELP_COPY = {
       "title": "Pelin päättäminen ja seuraava ottelu",
       "paragraphs": [
         "Valitse <strong>Ottelun asetukset → Merkitse ottelu päättyneeksi</strong>. Kello pysähtyy ja voit tehdä koosteen. <strong>Jatka ottelua</strong> avaa pelin tarvittaessa uudelleen.",
-        "<strong>Uusi ottelu</strong> siirtää nykyisen pelin arkistoon ja aloittaa uuden tuloksesta 0–0. Uudelle pelille valitaan oma kokoonpano.",
+        "<strong>Uusi ottelu</strong> siirtää nykyisen pelin arkistoon ja aloittaa uuden tuloksesta 0–0. Uudelle pelille valitaan oma kokoonpano ja maalivahdit.",
         "Vanhat pelit löytyvät <strong>Ottelut</strong>-välilehdeltä. Valitse peli ja <strong>Avaa ottelu</strong>, jos haluat korjata sitä. Nykyinen keskeneräinen peli säilytetään arkistossa."
       ]
     },
@@ -133,9 +136,9 @@ export const HELP_MESSAGES = {
     "en": "Record the play.",
     "sv": "Registrera händelsen."
   },
-  "Valitse Maali, Torjunta tai Jäähy, sitten joukkue ja pelaaja. Tallenna.": {
-    "en": "Choose Goal, Save or Penalty, then the team and player. Save the entry.",
-    "sv": "Välj Mål, Räddning eller Utvisning, sedan lag och spelare. Spara händelsen."
+  "Valitse tapahtuma ja joukkue. Torjunta tallentuu heti, kun maalivahti on valittu kerran. Maalille ja jäähylle täytä tiedot ja tallenna.": {
+    "en": "Choose the event and team. Once you have selected a goalkeeper, saves are recorded immediately. For goals and penalties, add the details and save.",
+    "sv": "Välj händelse och lag. När du har valt målvakt registreras räddningar direkt. Fyll i och spara uppgifterna för mål och utvisningar."
   },
   "Tehdään tästä parempi.": {
     "en": "Help make it better.",
@@ -209,9 +212,9 @@ export const HELP_MESSAGES = {
     "en": "<strong>Goal:</strong> choose the scoring team, scorer and up to two assisting players. You can leave the player unassigned and add them later.",
     "sv": "<strong>Mål:</strong> välj laget som gjorde mål, målskytten och upp till två spelare som fick assist. Du kan lämna spelaren tom och komplettera senare."
   },
-  "<strong>Torjunta:</strong> valitse torjuneen maalivahdin joukkue ja maalivahti. Vastustajalle lisätään samalla yksi laukaus maalia kohti.": {
-    "en": "<strong>Save:</strong> choose the team whose goalkeeper made the save, then the goalkeeper. One shot on goal is also added to the opposing team.",
-    "sv": "<strong>Räddning:</strong> välj laget vars målvakt gjorde räddningen och sedan målvakten. Motståndarlaget får samtidigt ett skott på mål."
+  "<strong>Torjunta:</strong> valitse torjuneen maalivahdin joukkue. Ensimmäisellä kerralla valitse maalivahdin numero kokoonpanosta tai kirjoita se itse. Voit myös kirjata ilman numeroa.": {
+    "en": "<strong>Save:</strong> choose the team whose goalkeeper made the save. The first time, select the goalkeeper’s number from the line-up or enter it yourself. You can also record without a number.",
+    "sv": "<strong>Räddning:</strong> välj laget vars målvakt gjorde räddningen. Första gången väljer du målvaktens nummer ur laguppställningen eller skriver in det själv. Du kan också registrera utan nummer."
   },
   "<div class=\"help-formula\"><strong>Laukaukset maalia kohti</strong><span>omat maalit + vastustajan torjunnat</span></div>": {
     "en": "<div class=\"help-formula\"><strong>Shots on goal</strong><span>your team’s goals + the opponents’ saves</span></div>",
@@ -245,9 +248,9 @@ export const HELP_MESSAGES = {
     "en": "Choose <strong>Match settings → Mark match as finished</strong>. The clock stops and you can create a summary. <strong>Resume match</strong> reopens the match if needed.",
     "sv": "Välj <strong>Matchinställningar → Markera matchen som avslutad</strong>. Klockan stannar och du kan skapa en sammanfattning. <strong>Fortsätt matchen</strong> öppnar matchen igen vid behov."
   },
-  "<strong>Uusi ottelu</strong> siirtää nykyisen pelin arkistoon ja aloittaa uuden tuloksesta 0–0. Uudelle pelille valitaan oma kokoonpano.": {
-    "en": "<strong>New match</strong> moves the current match to the archive and starts a new one at 0–0. Choose a separate line-up for each new match.",
-    "sv": "<strong>Ny match</strong> flyttar den nuvarande matchen till arkivet och startar en ny från 0–0. Välj en egen laguppställning för den nya matchen."
+  "<strong>Uusi ottelu</strong> siirtää nykyisen pelin arkistoon ja aloittaa uuden tuloksesta 0–0. Uudelle pelille valitaan oma kokoonpano ja maalivahdit.": {
+    "en": "<strong>New match</strong> moves the current match to the archive and starts a new one at 0–0. Choose a new line-up and goalkeepers for each match.",
+    "sv": "<strong>Ny match</strong> flyttar den nuvarande matchen till arkivet och startar en ny från 0–0. Välj en egen laguppställning och målvakter för den nya matchen."
   },
   "Vanhat pelit löytyvät <strong>Ottelut</strong>-välilehdeltä. Valitse peli ja <strong>Avaa ottelu</strong>, jos haluat korjata sitä. Nykyinen keskeneräinen peli säilytetään arkistossa.": {
     "en": "Previous matches are on the <strong>Matches</strong> tab. Choose a match and <strong>Open match</strong> to make corrections. The current unfinished match is kept in the archive.",
@@ -324,6 +327,17 @@ export const HELP_MESSAGES = {
   "Kiekkokirjuri {version} · Ohje toimii myös ilman nettiä.": {
     "en": "Kiekkokirjuri {version} · This guide works offline too.",
     "sv": "Kiekkokirjuri {version} · Bruksanvisningen fungerar även utan internet."
+  },
+  "Kun maalivahti on valittu, <strong>Torjunta → joukkue</strong> tallentaa seuraavan torjunnan heti. Vastustajalle lisätään samalla yksi laukaus maalia kohti. Joukkueiden maalivahtivalinnat ovat erilliset.": {
+    "en": "Once a goalkeeper is selected, <strong>Save → team</strong> records the next save immediately. One shot on goal is also added to the opposing team. Each team has its own goalkeeper selection.",
+    "sv": "När en målvakt har valts registrerar <strong>Räddning → lag</strong> nästa räddning direkt. Motståndarlaget får samtidigt ett skott på mål. Varje lag har ett eget målvaktsval."
+  },
+  "<strong>Vaihda maalivahti</strong> löytyy torjunnan joukkuevalinnasta. Maalivahdin voi vaihtaa myös <strong>Pelaajat</strong>-välilehdellä. Vaihto vaikuttaa seuraaviin torjuntoihin; aiempia kirjauksia korjataan tapahtumarivin kynästä.": {
+    "en": "<strong>Change goalkeeper</strong> is available when choosing a team for a save. You can also change the goalkeeper on the <strong>Players</strong> tab. The change applies to future saves; correct earlier entries using the pencil on the event row.",
+    "sv": "<strong>Byt målvakt</strong> finns i lagvalet för räddningar. Du kan också byta målvakt på fliken <strong>Spelare</strong>. Bytet gäller kommande räddningar; korrigera tidigare händelser med pennan på händelseraden."
+  },
+  "Pelaava maalivahti valitaan kummallekin joukkueelle erikseen. Voit tehdä valinnan <strong>Pelaajat</strong>-välilehdellä tai ensimmäisen torjunnan yhteydessä. Valinta säilyy erien välillä ja sovelluksen sulkemisen jälkeen myös ilman nettiä.": {
+    "en": "Select the active goalkeeper separately for each team. You can do this on the <strong>Players</strong> tab or when recording the first save. The selection is retained between periods and after closing the app, including offline.",
+    "sv": "Välj spelande målvakt separat för varje lag. Du kan göra det på fliken <strong>Spelare</strong> eller vid den första räddningen. Valet finns kvar mellan perioderna och när du stänger appen, även utan internet."
   }
 };
-

@@ -1,5 +1,5 @@
-import { setLanguage } from '../i18n.js?v=0.7.1';
-import { domainText } from '../domain-messages.js?v=0.7.1';
+import { setLanguage } from '../i18n.js?v=0.7.2';
+import { domainText } from '../domain-messages.js?v=0.7.2';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -215,7 +215,7 @@ test('snapshot and next period are pure and preserve events and archive', () => 
   next.events[0].n = '9';
   next.archive[0].home = 'Muutos';
   assert.deepEqual(current, original);
-  assert.equal(VERSION, '0.7.1');
+  assert.equal(VERSION, '0.7.2');
 });
 
 test('new event validation enforces the three-event model and valid unique assistants', () => {

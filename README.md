@@ -4,7 +4,13 @@ Offline-ottelukirjuri Kiekko-Espoon väreissä. Julkaistu GitHub Pagesiin:
 
 **https://henkkaha.github.io/kiekkokirjuri/**
 
-Versio **0.7.1**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
+Versio **0.7.2**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
+
+### Päivitys 0.7.2: torjunnat kahdella painalluksella
+
+Torjunta kirjataan valitsemalla **Torjunta → torjunut joukkue**. Maalivahti valitaan vain ensimmäisellä kerralla erikseen kummallekin joukkueelle. Valinta näkyy joukkueen painikkeessa ja säilyy ottelun ajan myös offline-käytössä. Sen voi vaihtaa erillisestä **Vaihda maalivahti** -painikkeesta tai **Pelaajat**-näkymästä. Uusi ottelu aloittaa valinnat tyhjistä. Vanhoja tapahtumia voi edelleen korjata yksittäin.
+
+Varmennus: kaikki 67 automaattista testiä läpäistiin. Selaimessa testattiin ensimmäinen valinta numerolle 0, seuraava torjunta ilman lisälomaketta, kumoaminen, maalivahdin vaihto ilman ylimääräistä tapahtumaa, vanhan kirjauksen korjaaminen, tuntematon maalivahti ja uuden ottelun nollaus. Alkuperäinen aikaleima säilyi, vaikka kello jatkoi käyntiä ensimmäisen maalivahtivalinnan aikana. Keskeneräinen pelaajarivi säilyi maalivahtia vaihdettaessa. Arkistosta avattu ottelu palautti molemmat valinnat. Suomen-, englannin- ja ruotsinkielinen käyttöliittymä tarkistettiin, mukaan lukien 320 px:n näkymä ja iPhonen simuloidut turva-alueet. Testipalvelin pysäytettiin, sovellus ladattiin uudelleen ja torjunta kirjattiin sekä kumottiin onnistuneesti ilman palvelinta. Fyysistä iPhonea ei testattu.
 
 ### Korjaus 0.7.1: iPhonen yläreuna
 
@@ -20,7 +26,7 @@ Turva-alueiden toteutus noudattaa [WebKitin ohjetta](https://webkit.org/blog/792
 2. Valitse **Uusi ottelu**, anna joukkueet ja valitse erän pituus. Voit valita valmiin EKS-kokoonpanon tai aloittaa tyhjillä pelaajalistoilla. Nykyinen ottelu siirtyy arkistoon.
 3. Lisää pelaajien numerot ja halutessasi sukunimet **Pelaajat**-välilehdellä. Numeroita ja nimiä voi täydentää myös jälkikäteen. Numero 0 on sallittu, ja sama numero voi kuulua eri joukkueiden pelaajille.
 4. Käynnistä erä. Kello laskee alaspäin. Pysäytä se pelikatkoilla; kellon asetuksista voi korjata jäljellä olevan ajan tai valmistella seuraavan erän.
-5. Kirjaa **Maali**, **Torjunta** tai **Jäähy**. Valitse ensin joukkue, sitten pelaaja ja lisätiedot. Tapahtuma-aika otetaan ensimmäisestä painalluksesta. Maalille voi valita enintään kaksi syöttäjää.
+5. Kirjaa **Maali**, **Torjunta** tai **Jäähy** ja valitse joukkue. Maalille ja jäähylle täytetään pelaaja ja lisätiedot; maalille voi valita enintään kaksi syöttäjää. Torjunnoissa valitaan maalivahti kerran, minkä jälkeen **Torjunta → joukkue** tallentaa merkinnän heti. Tapahtuma-aika otetaan ensimmäisestä painalluksesta.
 6. **Tilastot** näyttää joukkue- ja pelaajatilastot sekä tekstin ja PNG-kuvan viennin. **Ottelut** näyttää arkiston ja varmuuskopion viennin/palautuksen.
 
 ### Kieli: Suomi, English tai Svenska
@@ -30,6 +36,14 @@ Version 0.7.0 käyttöliittymä, käyttöohje, palautteen esikatselu, tekstikoos
 Ensimmäisellä avauksella sovellus käyttää laitteen ensisijaista tuettua kieltä. Jos laitteen kielistä mikään ei ole suomi, englanti tai ruotsi, oletuskieli on englanti. Oma tallennettu valinta ohittaa laitteen kielen. Kaikki kolme kieliversiota sisältyvät samaan offline-asennukseen, joten kielen vaihtaminen ei tarvitse verkkoyhteyttä tai uutta sovelluspäivitystä.
 
 Ottelutiedostojen tapahtumatyypit ja valmiit jäähytiedot säilyvät alkuperäisessä muodossa. Niiden näyttöteksti käännetään valitulle kielelle; omia kuvauksia ja nimiä ei konekäännetä. Saman ottelun voi viedä eri kielillä vaihtamalla sovelluksen kielen ennen koosteen avaamista. Sovelluksen nimi pysyy kaikilla kielillä **Kiekkokirjuri**.
+
+### Torjunta kahdella painalluksella
+
+Paina **Torjunta** ja valitse torjuneen maalivahdin joukkue. Ensimmäisellä kerralla sovellus kysyy maalivahtia: valitse numero kokoonpanosta tai kirjoita se itse. Numero 0 toimii myös. Jos numero ei ole tiedossa, voit valita kirjaamisen ilman numeroa. Ensimmäinen torjunta tallentuu valinnan yhteydessä.
+
+Seuraavilla kerroilla **Torjunta → joukkue** tallentaa merkinnän heti ilman lisälomaketta tai tallennuspainiketta. Joukkuevalinnan yhteydessä näkyy valittu maalivahti. Kummallakin joukkueella on oma valinta, joka säilyy erien välillä ja sovelluksen uudelleenavauksessa myös offline-käytössä.
+
+Valitse **Vaihda maalivahti** torjunnan joukkuevalinnassa tai vaihda pelaavaa maalivahtia **Pelaajat**-välilehdellä. Vaihto koskee seuraavia torjuntoja ja säilyttää aiempien merkintöjen maalivahdit. Väärän torjunnan voi kumota heti **Kumoa**-painikkeella tai korjata tapahtumarivin kynästä. **Uusi ottelu** aloittaa tyhjillä maalivahtivalinnoilla; arkistoitu ottelu säilyttää omansa.
 
 ### Laukaukset ja torjunnat
 
