@@ -1,5 +1,5 @@
 /** The storage shape deliberately stays compatible with ke-match-v1 backups. */
-export const VERSION = '0.6.3';
+export const VERSION = '0.6.4';
 
 const DEFAULT_LENGTH = 20 * 60;
 const NEW_EVENT_TYPES = new Set(['Maali', 'Torjunta', 'Jäähy']);

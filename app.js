@@ -1,10 +1,14 @@
 import { VERSION, createGame, normalizeState, elapsed, elapsedPrecise, formatTime, score, teamStats,
   playerStats, periodStats, archiveAndNew, openArchive, validateEvent,
-  normalizeNumber, nextPeriod, snapshot } from './model.js?v=0.6.3';
-import { setupPWA, checkForUpdate } from './pwa.js?v=0.6.3';
-import { textReport, createPoster } from './reports.js?v=0.6.3';
+  normalizeNumber, nextPeriod, snapshot } from './model.js?v=0.6.4';
+import { setupPWA, checkForUpdate } from './pwa.js?v=0.6.4';
+import { textReport, createPoster } from './reports.js?v=0.6.4';
+import { renderHelp } from './help.js?v=0.6.4';
+import { FEEDBACK_STORAGE_KEY, FEEDBACK_KINDS, FEEDBACK_LIMITS, createFeedbackDraft,
+  normalizeFeedbackDraft, validateFeedbackDraft, buildFeedbackEmail } from './feedback.js?v=0.6.4';
 
 const STORAGE_KEY = 'ke-match-v1';
+const FEEDBACK_RECIPIENT = 'henri.haho@gmail.com';
 const $ = id => document.getElementById(id);
 const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, char => ({
   '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
@@ -32,6 +36,7 @@ const paths = {
   image:'<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1"/><path d="m4 17 6-6 4 4 3-3 4 4"/>',
   text:'<path d="M6 3h9l4 4v14H6V3ZM15 3v5h4M9 12h7M9 16h7"/>',
   share:'<path d="M12 15V3m-4 4 4-4 4 4M7 10H4v11h16V10h-3"/>',
+  mail:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/>',
   trash:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>',
   new:'<path d="M6 3h9l4 4v14H6V3ZM15 3v5h4M9 14h7M12.5 10.5v7"/>',
   wifi:'<path d="M3 9a14 14 0 0 1 18 0M6 12a9 9 0 0 1 12 0M9 15a4 4 0 0 1 6 0M12 19h.01"/>',
@@ -73,6 +78,10 @@ let pwaStatus = null;
 let viewAllEvents = false;
 let wakeLock = null;
 let sheetToken = 0;
+let feedbackDraft = null;
+let feedbackStorageIssue = '';
+let feedbackStorageBlocked = false;
+let feedbackPreview = null;
 
 function hasDraft() {
   return $('sheet').open || Boolean($('player-number')?.value || $('player-name')?.value);
@@ -244,6 +253,7 @@ function openSheet(title, subtitle, body, footer='', formId='', preservePosition
   return token;
 }
 function closeSheet() {
+  captureFeedbackDraft();
   sheetToken++;
   $('sheet').close();
   pending = null;
@@ -530,6 +540,191 @@ function showMenu() {
   pending=null;
   const item=(action,i,title,description)=>`<button class="menu-item" type="button" data-action="${action}">${icon(i)}<span>${title}<small>${description}</small></span>${icon('arrow','class="chevron"')}</button>`;
   openSheet('Peli hallussa.','Asetukset ja tiedot.',`<div class="menu-list">${item('match-settings','settings','Ottelun asetukset','Joukkueet, kello ja erät')}${item('new-game','new','Uusi ottelu','Nykyinen peli talteen, uusi tilalle')}${item('backup','download','Vie varmuuskopio','Kaikki ottelut yhdessä tiedostossa')}${item('restore','upload','Palauta varmuuskopio','Avaa aiemmin viety JSON-tiedosto')}${item('install-help','share','Lisää kotivalikkoon','Oma kuvake iPhonen tai Androidin aloitusnäyttöön')}</div><hr class="menu-divider"><p class="small muted" id="offline-description">${escapeHTML(pwaStatus?.message||'Tarkistetaan offline-valmiutta…')}</p><div class="version-line"><span>Versio ${VERSION}</span><button class="text-button" type="button" data-action="check-update">${icon('refresh')}Tarkista päivitys</button></div><p class="field-note">Epävirallinen ottelutyökalu Kiekko-Espoon väreissä.</p>`);
+  $('sheet-content').querySelector('.menu-list').insertAdjacentHTML('afterbegin',
+    item('help','info','Ohje ja palaute','Käyttöohje, bugit ja kehitysideat'));
+}
+function loadFeedbackDraft() {
+  if (feedbackDraft) return feedbackDraft;
+  feedbackDraft = createFeedbackDraft();
+  try {
+    const raw = localStorage.getItem(FEEDBACK_STORAGE_KEY);
+    if (raw !== null) {
+      try { feedbackDraft = normalizeFeedbackDraft(JSON.parse(raw)); }
+      catch {
+        feedbackStorageBlocked = true;
+        feedbackStorageIssue = 'Aiemman palauteluonnoksen lukeminen epäonnistui. Uutta tekstiä ei tallenneta sen päälle. Voit silti valmistella ja kopioida viestin.';
+      }
+    }
+  } catch {
+    feedbackStorageIssue = 'Luonnoksen tallennustila ei ole käytettävissä. Kopioi viesti talteen ennen sovelluksen sulkemista.';
+  }
+  return feedbackDraft;
+}
+function feedbackHasContent() {
+  const draft = loadFeedbackDraft();
+  return Boolean(draft.title.trim() || draft.description.trim() || draft.steps.trim());
+}
+function updateFeedbackStatus() {
+  const status = $('feedback-draft-status');
+  if (!status) return;
+  const message = feedbackStorageIssue || (feedbackHasContent()
+    ? 'Luonnos tallennettu tähän laitteeseen.'
+    : 'Luonnos tallentuu automaattisesti tähän laitteeseen.');
+  if (status.textContent !== message) status.textContent = message;
+  status.classList.toggle('feedback-warning', Boolean(feedbackStorageIssue));
+}
+function saveFeedbackDraft() {
+  if (feedbackStorageBlocked) { updateFeedbackStatus(); return false; }
+  try {
+    localStorage.setItem(FEEDBACK_STORAGE_KEY, JSON.stringify(feedbackDraft));
+    feedbackStorageIssue = '';
+    updateFeedbackStatus();
+    return true;
+  } catch {
+    feedbackStorageIssue = 'Luonnosta ei saatu tallennettua. Teksti on vielä tässä ikkunassa. Kopioi tai lataa se talteen ennen sulkemista.';
+    updateFeedbackStatus();
+    return false;
+  }
+}
+function captureFeedbackDraft() {
+  const form = $('feedback-form');
+  if (!form) return feedbackDraft;
+  const data = new FormData(form);
+  try {
+    feedbackDraft = normalizeFeedbackDraft({
+      type: data.get('type'),
+      title: data.get('title'),
+      description: data.get('description'),
+      steps: data.get('steps'),
+      includeDiagnostics: data.get('diagnostics') === 'yes',
+    });
+  } catch (error) {
+    feedbackStorageIssue = error.message;
+    updateFeedbackStatus();
+    return null;
+  }
+  saveFeedbackDraft();
+  const isBug = feedbackDraft.type === 'bug';
+  $('feedback-steps-row').hidden = !isBug;
+  $('feedback-description-label').textContent = isBug ? 'Mitä tapahtui?' : feedbackDraft.type === 'idea' ? 'Mitä toivoisit?' : 'Mikä mietityttää?';
+  return feedbackDraft;
+}
+function feedbackContext() {
+  const ua = navigator.userAgent || '';
+  let platform = 'Muu laite';
+  if (/iPhone|iPod/.test(ua)) platform = 'iPhone / iOS';
+  else if (/iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) platform = 'iPad / iPadOS';
+  else if (/Android/.test(ua)) platform = 'Android';
+  else if (/Windows/.test(ua)) platform = 'Windows';
+  else if (/Macintosh|Mac OS X/.test(ua)) platform = 'Mac';
+  else if (/Linux/.test(ua)) platform = 'Linux';
+  let browser = 'Muu selain';
+  for (const [pattern, name] of [
+    [/(?:Edg|EdgiOS|EdgA)\/([\d.]+)/, 'Edge'],
+    [/SamsungBrowser\/([\d.]+)/, 'Samsung Internet'],
+    [/(?:FxiOS|Firefox)\/([\d.]+)/, 'Firefox'],
+    [/(?:CriOS|Chrome)\/([\d.]+)/, 'Chrome'],
+    [/Version\/([\d.]+).*Safari/, 'Safari'],
+  ]) {
+    const match = ua.match(pattern);
+    if (match) { browser = name + ' ' + match[1].split('.')[0]; break; }
+  }
+  return { recipient: FEEDBACK_RECIPIENT, version: VERSION, platform, browser,
+    standalone: window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true,
+    online: navigator.onLine, offlineReady: Boolean(pwaStatus?.offlineReady) };
+}
+function showHelp() {
+  captureFeedbackDraft();
+  pending = null;
+  const resume = feedbackHasContent()
+    ? '<button class="feedback-resume" type="button" data-action="feedback-resume">' + icon('edit') + '<span>Jatka palauteluonnosta<small>' + escapeHTML(feedbackDraft.title || FEEDBACK_KINDS[feedbackDraft.type]) + '</small></span></button>'
+    : '';
+  openSheet('Ohje ja palaute', 'Apua peliin. Ideat talteen.',
+    resume + renderHelp({icon, escapeHTML, version: VERSION}),
+    '<button class="button primary" type="button" data-action="close-sheet">Valmis</button>');
+}
+function showFeedback(kind) {
+  captureFeedbackDraft();
+  loadFeedbackDraft();
+  if (Object.hasOwn(FEEDBACK_KINDS, kind)) {
+    feedbackDraft.type = kind;
+    if (feedbackHasContent()) saveFeedbackDraft();
+  }
+  pending = null;
+  feedbackPreview = null;
+  const draft = feedbackDraft;
+  const isBug = draft.type === 'bug';
+  const options = Object.entries(FEEDBACK_KINDS).map(([value, label]) =>
+    '<option value="' + value + '"' + (draft.type === value ? ' selected' : '') + '>' + label + '</option>').join('');
+  const body = '<div class="feedback-form-body">' +
+    '<div class="feedback-recipient">' + icon('mail') + '<div><strong>Palaute Henrille</strong><span>' + FEEDBACK_RECIPIENT + '</span></div></div>' +
+    '<p class="feedback-intro">Kerro lyhyesti, mitä huomasit tai mitä toivot. Saat tarkistaa viestin ennen sähköpostin avaamista.</p>' +
+    '<label class="field" for="feedback-kind">Palautteen tyyppi<select id="feedback-kind" name="type">' + options + '</select></label>' +
+    '<label class="field" for="feedback-title">Aihe<input id="feedback-title" name="title" maxlength="' + FEEDBACK_LIMITS.title + '" value="' + escapeHTML(draft.title) + '" placeholder="Esimerkiksi kellon korjaaminen" required autocomplete="off"></label>' +
+    '<label class="field" for="feedback-description"><span id="feedback-description-label">' + (isBug ? 'Mitä tapahtui?' : draft.type === 'idea' ? 'Mitä toivoisit?' : 'Mikä mietityttää?') + '</span><textarea id="feedback-description" name="description" maxlength="' + FEEDBACK_LIMITS.description + '" placeholder="Kerro omin sanoin. Mitä teit ja mitä odotit tapahtuvan?" required rows="5">' + escapeHTML(draft.description) + '</textarea></label>' +
+    '<label class="field" id="feedback-steps-row" for="feedback-steps"' + (isBug ? '' : ' hidden') + '>Miten ongelman saa esiin? <small>Valinnainen</small><textarea id="feedback-steps" name="steps" maxlength="' + FEEDBACK_LIMITS.steps + '" placeholder="Esimerkiksi: avaan ottelun, käynnistän kellon…" rows="3">' + escapeHTML(draft.steps) + '</textarea></label>' +
+    '<label class="feedback-diagnostics"><input type="checkbox" id="feedback-diagnostics" name="diagnostics" value="yes"' + (draft.includeDiagnostics ? ' checked' : '') + '><span>Liitä tekniset perustiedot<small>Sovellusversio, käyttöjärjestelmä, selain ja yhteyden tila. Otteluita tai pelaajatietoja ei liitetä.</small></span></label>' +
+    '<p class="feedback-draft-status" id="feedback-draft-status" role="status" aria-live="polite"></p>' +
+    '<p class="feedback-footnote">Voit kirjoittaa myös ilman nettiä. Lähetys tehdään omasta sähköpostisovelluksestasi, kun yhteys on käytettävissä.</p>' +
+    '<button class="text-button feedback-clear" type="button" data-action="feedback-clear">Tyhjennä palauteluonnos</button></div>';
+  openSheet('Palaute kehittäjälle', 'Bugi, kehitysidea tai kysymys.', body,
+    '<button class="button quiet" type="button" data-action="help">Takaisin</button><button class="button primary" type="submit">Esikatsele viesti</button>',
+    'feedback-form');
+  updateFeedbackStatus();
+}
+function prepareFeedback() {
+  const captured = captureFeedbackDraft();
+  if (!captured) throw new Error(feedbackStorageIssue || 'Tarkista palautteen tiedot.');
+  feedbackDraft = validateFeedbackDraft(captured);
+  saveFeedbackDraft();
+  feedbackPreview = buildFeedbackEmail(feedbackDraft, feedbackContext());
+  const longMessage = feedbackPreview.mailto.length > 1800;
+  const mailto = longMessage ? feedbackPreview.mailto.split('&body=')[0] : feedbackPreview.mailto;
+  const explanation = longMessage
+    ? '<p class="feedback-delivery-note feedback-warning"><strong>Kopioi pitkä viesti ensin.</strong> Paina Kopioi viesti, avaa sähköposti ja liitä teksti viestiin. Vastaanottaja ja aihe täyttyvät valmiiksi.</p>'
+    : '<p class="feedback-delivery-note"><strong>Lähetät viestin sähköpostisovelluksessa.</strong> Avaa sähköposti, tarkista viesti ja paina siellä Lähetä. Voit liittää kuvakaappauksen sähköpostissa.</p>';
+  const body = '<div class="feedback-preview">' +
+    '<div class="feedback-recipient">' + icon('mail') + '<div><strong>Henri Haho</strong><span>' + FEEDBACK_RECIPIENT + '</span></div></div>' +
+    '<p class="feedback-subject"><span>Aihe</span><strong>' + escapeHTML(feedbackPreview.subject) + '</strong></p>' +
+    '<textarea id="feedback-preview-text" class="feedback-preview-text" readonly aria-label="Palautteen esikatselu">' + escapeHTML(feedbackPreview.body) + '</textarea>' +
+    explanation +
+    '<div class="feedback-copy-actions"><button class="button" type="button" data-action="feedback-copy">' + icon('text') + 'Kopioi viesti</button><button class="button" type="button" data-action="feedback-download">' + icon('download') + 'Lataa teksti</button></div>' +
+    '<button class="text-button feedback-address" type="button" data-action="feedback-copy-address">Kopioi sähköpostiosoite</button>' +
+    '<p class="feedback-draft-status" id="feedback-draft-status" role="status" aria-live="polite"></p>' +
+    '<p class="feedback-footnote">Jos sähköposti ei avaudu, kopioi viesti ja osoite omaan sähköpostiisi. Tallennettu luonnos säilyy, kunnes tyhjennät sen. Sovellus ei näe, lähetettiinkö viesti.</p>' +
+    '<button class="text-button feedback-clear" type="button" data-action="feedback-clear">Tyhjennä palauteluonnos</button></div>';
+  openSheet('Valmis sähköpostiin', 'Tarkista viesti ennen lähettämistä.', body,
+    '<button class="button quiet" type="button" data-action="feedback-resume">Muokkaa</button><a class="button primary" id="feedback-email-link" data-action="feedback-email" href="' + escapeHTML(mailto) + '">' + icon('mail') + 'Avaa sähköposti</a>');
+  updateFeedbackStatus();
+}
+async function copyFeedback(addressOnly = false) {
+  const text = addressOnly ? FEEDBACK_RECIPIENT : feedbackPreview?.body;
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    notify(addressOnly ? 'Sähköpostiosoite kopioitu.' : 'Palaute kopioitu. Liitä se sähköpostiisi.');
+  } catch {
+    if (addressOnly) formError('Kopioi osoite käsin: ' + FEEDBACK_RECIPIENT);
+    else {
+      const preview = $('feedback-preview-text');
+      preview?.focus(); preview?.select();
+      formError('Selain ei sallinut kopiointia. Kopioi valittu teksti käsin tai lataa se tiedostona.');
+    }
+  }
+}
+function clearFeedback() {
+  captureFeedbackDraft();
+  askConfirm('Tyhjennetäänkö palauteluonnos?', 'Vain tämän palautteen teksti poistetaan. Ottelut säilyvät.',
+    () => {
+      try { localStorage.removeItem(FEEDBACK_STORAGE_KEY); }
+      catch { formError('Luonnosta ei voitu poistaa laitteen tallennustilasta.'); return; }
+      feedbackDraft = createFeedbackDraft();
+      feedbackStorageIssue = '';
+      feedbackStorageBlocked = false;
+      feedbackPreview = null;
+      showHelp();
+      notify('Palauteluonnos tyhjennetty.');
+    }, 'Tyhjennä', true);
 }
 function showInstallHelp() {
   openSheet('Kiekkokirjuri kotivalikkoon','iPhone ja Android',`<div class="info-list"><div class="info-item">${icon('share')}<div><strong>iPhone · Safari</strong>Avaa tämä osoite Safarissa. Valitse Jaa → Lisää Koti-valikkoon. Ota Avaa verkkoappina käyttöön, jos valinta näkyy. Tarkista nimeksi Kiekkokirjuri ja paina Lisää.</div></div><div class="info-item">${icon('rink')}<div><strong>Android · Chrome</strong>Avaa tämä osoite Chromessa. Valitse ⋮ → Asenna ja luo pikakuvake → Asenna. Joissakin versioissa valinta on Lisää aloitusnäyttöön.</div></div><div class="info-item">${icon('check')}<div><strong>Avaa uusi Kiekkokirjuri-kuvake kerran netissä</strong>Odota, että asetuksissa lukee Valmis myös ilman yhteyttä. Sen jälkeen voit kirjata ottelut ilman verkkoa. Uudet kokoonpanot ja sovelluspäivitykset haetaan verkkoyhteydellä.</div></div></div><p class="helper-box" style="margin-top:22px"><strong>Onko sinulla jo otteluita vanhassa kuvakkeessa tai selaimessa?</strong><br>Vie niistä varmuuskopio ennen uuden kuvakkeen lisäämistä. Vanha kuvake ei välttämättä vaihda nimeä tai kuvaa itsestään. Jos uusi kuvake avaa tyhjän ottelun, palauta varmuuskopio siinä. Säilytä vanha sovellus, kunnes ottelut näkyvät myös uudessa.</p>`,
@@ -602,6 +797,14 @@ document.addEventListener('click',async event=>{
   try {
     switch(action) {
       case 'menu':showMenu();break;
+      case 'help':showHelp();break;
+      case 'feedback-open':showFeedback(button.dataset.kind);break;
+      case 'feedback-resume':showFeedback();break;
+      case 'feedback-copy':await copyFeedback();break;
+      case 'feedback-copy-address':await copyFeedback(true);break;
+      case 'feedback-clear':clearFeedback();break;
+      case 'feedback-email':notify('Viesti on valmisteltu. Lähetä se sähköpostisovelluksessasi.');break;
+      case 'feedback-download':if(feedbackPreview)download(new Blob(['Vastaanottaja: '+FEEDBACK_RECIPIENT+'\nAihe: '+feedbackPreview.subject+'\n\n'+feedbackPreview.body],{type:'text/plain;charset=utf-8'}),'kiekkokirjuri-palaute.txt');break;
       case 'close-sheet':closeSheet();break;
       case 'confirm':if(confirmAction)confirmAction();break;
       case 'undo':{const undo=undoAction;$('toast').hidden=true;undoAction=null;if(undo)undo();break;}
@@ -653,6 +856,7 @@ document.addEventListener('submit',event=>{
   try {
     switch(form.id) {
       case 'event-form':submitEvent();break;
+      case 'feedback-form':prepareFeedback();break;
       case 'new-game-form':submitNewGame(form);break;
       case 'settings-form':submitSettings(form);break;
       case 'clock-form':{const remaining=parseTime(new FormData(form).get('remaining'));if(remaining>state.periodLength)throw new Error('Aika ei voi ylittää erän pituutta.');if(mutate(next=>{next.seconds=state.periodLength-remaining;next.start=null;next.configured=true;})){closeSheet();notify('Kello korjattu. Käynnistä se, kun peli jatkuu.');}break;}
@@ -662,6 +866,7 @@ document.addEventListener('submit',event=>{
   }catch(error){formError(error.message||'Tarkista lomakkeen tiedot.',form.id==='add-player-form'?'roster-error':'sheet-error');}
 });
 document.addEventListener('input',event=>{
+  if(event.target.closest('#feedback-form')){captureFeedbackDraft();return;}
   if(pending&&event.target.id==='manual-number')pending._manualNumber=event.target.value;
   if(pending&&event.target.id==='manual-assist')pending._manualAssist=event.target.value;
   const field=event.target.dataset.pending;
@@ -669,6 +874,7 @@ document.addEventListener('input',event=>{
   pending[field]=field==='minutes'?Number(event.target.value):event.target.value;
 });
 document.addEventListener('change',event=>{
+  if(event.target.closest('#feedback-form')){captureFeedbackDraft();return;}
   if(!pending)return;
   const field=event.target.dataset.pending;
   if(field==='penaltyType') {

@@ -4,7 +4,7 @@ Offline-ottelukirjuri Kiekko-Espoon väreissä. Julkaistu GitHub Pagesiin:
 
 **https://henkkaha.github.io/kiekkokirjuri/**
 
-Versio **0.6.3**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
+Versio **0.6.4**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
 
 ## Käyttö
 
@@ -45,6 +45,18 @@ Version 0.6.3 kolme kuvaa on luotu erillisillä kuvanluontipyynnöillä. Kuvakke
 
 Mainoskuvat eivät kuulu sovelluksen offline-lataukseen, joten ne eivät kasvata puhelimeen asennettavaa sovelluspakettia.
 
+### Ohje ja palaute
+
+Avaa yläpalkin **?** tai valikon **Ohje ja palaute**. Käyttöohje kattaa ottelun luomisen, kokoonpanot, kellon, tapahtumien kirjaamisen ja korjaamisen, koosteet, varmuuskopiot ja offline-käytön. Ohje on mukana asennetussa sovelluksessa ja avautuu ilman verkkoyhteyttä.
+
+Valitse **Ilmoita bugista**, **Ehdota ominaisuutta** tai ohjeen lopusta **Kysy kehittäjältä**. Kirjoita aihe ja kuvaus; bugiin voi lisätä toistamisen vaiheet. Luonnos säilyy laitteessa erillään otteluista, avaimella `kiekkokirjuri-feedback-v1`. Sitä voi jatkaa myöhemmin ja sen voi tyhjentää erikseen.
+
+Palaute valmistellaan osoitteeseen **henri.haho@gmail.com**. Esikatselun jälkeen sähköpostilinkki avaa käyttäjän oman sähköpostisovelluksen valmiilla vastaanottajalla, aiheella ja lyhyen viestin sisällöllä. Käyttäjä lähettää viestin siinä. Sovellus ei lähetä palautetta automaattisesti, saa toimitusvahvistusta eikä väitä viestiä lähetetyksi sähköpostilinkin avaamisen perusteella. Sähköpostin lähettäminen tarvitsee verkkoyhteyden; palautteen kirjoittaminen ja luonnoksen säilyttäminen eivät.
+
+Viestin voi myös kopioida. Tämä toimii varatapana, jos laitteella ei ole sähköpostilinkkejä avaavaa sovellusta tai viesti on pitkä. Pitkän viestin avaaminen täyttää vastaanottajan ja aiheen; koko teksti kopioidaan tai ladataan erikseen. Sovellus ei tyhjennä luonnosta sähköpostin avaamisen tai kopioinnin jälkeen.
+
+Käyttäjä voi valita mukaan sovelluksen version ja laitteen/selaimen perustiedot sekä verkko- ja offline-valmiuden. Automaattiset lisätiedot eivät sisällä otteluita, pelaajien nimiä, kokoonpanoja tai varmuuskopioita. Lähetettävä teksti on nähtävissä ennen sähköpostin avaamista.
+
 ### Tallennus ja päivitykset
 
 - Tallennusavain pysyy samana: `ke-match-v1`. Vanhojen versioiden ottelut ja arkistot normalisoidaan niitä poistamatta.
@@ -70,6 +82,8 @@ Avaa `/kiekkokirjuri/` localhost-osoitteessa. Service worker toimii localhostiss
 | `app.js` | Kirjausnäkymät, lomakkeet, paikallinen tallennus ja viennit |
 | `model.js` | Ajanlaskenta, tilastot, validointi ja vanhojen tietojen siirto |
 | `reports.js` | Täydellinen tekstiraportti ja paikallisesti luotu PNG-kooste |
+| `help.js`, `help.css` | Offline-käyttöohje ja palautteen aloitusvalinnat |
+| `feedback.js` | Palauteluonnoksen validointi, viestin muodostus ja sähköpostilinkin koodaus |
 | `pwa.js`, `sw.js` | Offline-valmius, versioidut resurssit ja hallittu päivitys |
 | `assets/`, `manifest.json` | Paikalliset tunnukset ja asennuskuvakkeet |
 
@@ -81,6 +95,10 @@ node --check app.js
 ```
 
 Versiolle 0.6.3 ajettiin 25 automaattista testiä hyväksytysti sekä JavaScriptin syntaksitarkistukset. Testit kattavat laukauslaskennan, pelaajan numeron 0, syöttäjät, vanhat varmuuskopiot, arkistojen eristyksen, kellon toistuvien pysäytysten tarkkuuden, raportit sekä offline-välimuistin ja päivityksen eheystarkistukset.
+
+Versiolle 0.6.4 ajettiin kaikki 33 automaattista testiä hyväksytysti. Kahdeksan uutta palautetestiä kattavat luonnoksen validoinnin, ääkköset ja erikoismerkit, vastaanottajan ja sähköpostilinkin turvallisen muodostamisen, pitkän tekstin säilymisen sekä teknisten tietojen rajauksen ja pois jättämisen. Offline-tarkistuksiin lisättiin käyttöohjeen, palautemoduulin ja ohjeen tyylien välimuistitus sekä tarkan version käyttö verkkoyhteyden puuttuessa. Puuttuva ohje- tai palautemoduuli estää keskeneräisen päivityksen käyttöönoton.
+
+Version 0.6.4 palaute testattiin Chromiumissa myös 320 px:n levyisessä selainkehyksessä: ohje ja palautelomake mahtuivat näkymään, bugiraportin vastaanottaja ja sisältö täsmäsivät, tekstin kopiointi onnistui, kehitysidean valinta poisti bugikohtaiset lisätiedot viestistä ja tekniset tiedot sai jätettyä pois. Pitkän viestin kopiointivaihtoehto säilytti koko tekstin. Esikatselupalvelin pysäytettiin ja asennettu sovellus ladattiin uudelleen: ohje ja tallennettu palauteluonnos toimivat edelleen. Luonnoksen tyhjentäminen testattiin erikseen. Testiviestiä ei lähetetty sähköpostilla; varsinainen lähetys tehdään käyttäjän omassa sähköpostisovelluksessa.
 
 Aiemman version 0.6.0 käyttö tarkistettiin Chromium-selaimessa: maalit ja kaksi syöttäjää, torjunnat, jäähyt, tilastot, kellon korjaus ja nollaraja, seuraava erä, uuden ottelun tyhjät kokoonpanot, arkiston säilyminen, kahden ikkunan ristiriidan esto, PNG-kuvakoosteen renderöinti ja JSON-vienti. Sen responsiivinen ulkoasu tarkistettiin 390 px:n ja 320 px:n levyisissä selainkehyksissä sekä työpöytäkoossa. Nämä historialliset tarkistukset eivät ole uuden version selaintestituloksia. Fyysistä iPhonea ei testattu. Tiedostovalitsimen päästä päähän -palautustesti jäi testiselaimen työkaluaikakatkaisun vuoksi vahvistamatta; varmuuskopion validointi testattiin automaattisesti.
 

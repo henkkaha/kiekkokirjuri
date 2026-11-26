@@ -36,3 +36,38 @@
 @media(max-width:680px){.team-name{font-size:12px}.action-label{font-size:16px}.clock-button{font-size:12px}.connection-indicator{font-size:0}.section-heading .eyebrow{font-size:9px}.action-hint{font-size:11px}.event-meta{font-size:11px}.view-footer{font-size:10px}.nav-item{font-size:11px}.board-top{padding-top:12px}.scoreline{padding-top:10px}.board-stats{gap:14px}.sheet-step{font-size:11px}.event-row{gap:8px}.event-time{min-width:40px}.event-symbol{width:30px;height:30px}.event-title{font-size:13px}.comparison-head{font-size:12px}.comparison-label{font-size:12px}.inline-form .button{padding-inline:13px}.number-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 
 .roster-preview{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.roster-preview-chip{border:1px solid #dce5f3;border-radius:8px;padding:5px 9px;background:#fff;color:#000032;font-size:12px;font-weight:650}
+
+/* Local help and feedback fit the same thumb-friendly match flow. */
+.header-help{width:44px;height:44px;min-width:44px;min-height:44px;padding:11px;border:1px solid var(--line);border-radius:14px;color:var(--blue);background:#fff}
+.feedback-form-body,.feedback-preview{display:flex;flex-direction:column;gap:18px;font-size:14px;line-height:1.6}
+.feedback-recipient{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid #dbe5f4;border-radius:14px;background:#f5f8fe;color:var(--navy)}
+.feedback-recipient>svg{width:23px;height:23px;flex:none;color:var(--blue)}
+.feedback-recipient strong{display:block;font-size:15px}
+.feedback-recipient span{display:block;font-size:14px;overflow-wrap:anywhere;color:#52647d}
+.feedback-intro{font-size:14px;line-height:1.7;color:#566078}
+.feedback-form-body .field{gap:8px;font-size:14px}
+.feedback-form-body .field input,.feedback-form-body .field select{font-size:16px}
+.feedback-form-body .field textarea{width:100%;font:inherit;font-size:16px;line-height:1.6;min-height:112px;padding:13px 14px;resize:vertical;border:1px solid var(--line);border-radius:12px;color:var(--ink);background:#fff}
+.feedback-form-body .field textarea:focus{outline:3px solid #d7e6ff;border-color:var(--blue)}
+.feedback-form-body .field small{font-size:12px;color:var(--muted);font-weight:450}
+.feedback-diagnostics{display:flex;align-items:flex-start;gap:12px;padding:12px 0;cursor:pointer;color:var(--ink);font-size:14px;font-weight:650;line-height:1.6}
+.feedback-diagnostics input{flex:none;width:22px;height:22px;accent-color:var(--blue);margin:2px 0 0}
+.feedback-diagnostics small{display:block;font-size:12px;font-weight:450;color:var(--muted);margin-top:4px;line-height:1.65}
+.feedback-draft-status{font-size:13px;padding:12px 14px;border-radius:12px;background:#eff8f3;color:#28533e;line-height:1.65}
+.feedback-footnote{font-size:12px;color:var(--muted);line-height:1.7}
+.feedback-clear{color:#a5364b;align-self:flex-start;min-height:44px;text-align:left}
+.feedback-resume{width:100%;display:flex;align-items:center;gap:12px;min-height:62px;padding:14px 16px;margin-bottom:22px;text-align:left;border:1px solid #ddd5a1;border-radius:14px;background:#fff9dc;color:var(--navy);font-size:14px;font-weight:700}
+.feedback-resume svg{width:21px;height:21px;flex:none}
+.feedback-resume span{min-width:0}
+.feedback-resume small{display:block;font-size:12px;font-weight:450;overflow-wrap:anywhere;margin-top:3px;color:#6e6535}
+.feedback-subject span{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+.feedback-subject strong{display:block;font-size:15px;overflow-wrap:anywhere}
+.feedback-preview-text{width:100%;min-height:260px;padding:15px;font:inherit;font-size:14px;line-height:1.75;color:var(--ink);border:1px solid var(--line);border-radius:14px;background:#f9fbfe;resize:vertical}
+.feedback-delivery-note{padding:14px 16px;border-radius:14px;background:#edf4ff;color:#3f5575;font-size:14px;line-height:1.7}
+.feedback-delivery-note strong{display:block;color:var(--navy);margin-bottom:3px}
+.feedback-warning{background:#fff6d7;color:#765b15;border:1px solid #ecdfaa}
+.feedback-copy-actions{display:flex;gap:10px;flex-wrap:wrap}
+.feedback-copy-actions .button{flex:1;min-height:48px;font-size:13px}
+.feedback-address{align-self:flex-start;text-align:left;min-height:44px}
+.sheet-footer #feedback-email-link{text-decoration:none}
+@media(max-width:380px){.header-inner{padding-inline:14px}.header-actions{gap:6px}.header-actions>.connection-indicator{display:none}.brand{gap:7px}.brand img{width:34px;height:34px}.brand-title{font-size:18px}.feedback-copy-actions .button{padding-inline:10px;font-size:12px}}
