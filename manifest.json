@@ -1,1 +1,33 @@
-{"name":"Kiekkokirjuri","short_name":"Kiekkokirjuri","start_url":"./index.html","scope":"./","display":"standalone","background_color":"#edf2f8","theme_color":"#082447","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml"}]}
+{
+  "id": "./index.html",
+  "name": "Kiekkokirjuri",
+  "short_name": "Kirjuri",
+  "description": "Kiekko-Espoon ottelukirjuri: maalit, torjunnat ja jäähyt myös ilman verkkoyhteyttä.",
+  "lang": "fi",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f5f9",
+  "theme_color": "#000032",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
