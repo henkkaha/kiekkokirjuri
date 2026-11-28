@@ -75,7 +75,12 @@ export const HELP_COPY = {
       "title": "Tilastot ja ottelukooste",
       "paragraphs": [
         "<strong>Tilastot</strong>-välilehdellä näkyvät joukkueiden ja pelaajien luvut. Pelaajan pisteet ovat maalit ja syötöt yhteensä.",
-        "<strong>Ottelukuva</strong> tekee jaettavan PNG-kuvan. <strong>Tekstikooste</strong> sisältää kaikki tapahtumat ja tilastot; voit kopioida sen tai ladata tekstitiedoston. Koosteet syntyvät myös ilman verkkoyhteyttä.",
+        "<strong>Jaa ottelu</strong> tekee yhden kuvan ja katselulinkin samaan otteluun. Valitse ensin kuvan kieli: <strong>Suomi, English tai Svenska</strong>. Jaa sitten kuva ja linkki esimerkiksi WhatsApp-ryhmään.",
+        "Linkin avaaja valitsee koostesivulla itse <strong>suomen, englannin tai ruotsin</strong>. Tunnusta ei tarvita. Katselu ei muuta vastaanottajan omaa ottelua tai kirjaussovelluksen kielivalintaa.",
+        "Linkki näyttää <strong>jakamishetken tilanteen</strong>. Jos korjaat ottelua myöhemmin, jaa uusi linkki. Linkin saanut voi avata koosteen ja välittää linkin edelleen.",
+        "<strong>Ottelukuva</strong> tekee erillisen PNG-kuvan. <strong>Tekstikooste</strong> sisältää kaikki tapahtumat ja tilastot; voit kopioida sen tai ladata tekstitiedoston. Kieli kysytään joka kerta, eikä valinta muuta sovelluksen käyttökieltä.",
+        "Kuvan, tekstikoosteen ja linkin voi valmistella ilman nettiä. Viestin lähettäminen ja koostesivun ensimmäinen avaaminen tarvitsevat verkkoyhteyden.",
+        "Jos jakokohde ei lisää linkkiä kuvan mukaan, käytä <strong>Kopioi linkki</strong> ja liitä linkki viestiin.",
         "Myös arkistoidun ottelun koosteet saa <strong>Ottelut</strong>-välilehdeltä."
       ]
     },
@@ -100,7 +105,7 @@ export const HELP_COPY = {
       "title": "Kielen vaihtaminen",
       "paragraphs": [
         "Valitse yläpalkin kielipainikkeesta <strong>Suomi, English tai Svenska</strong>. Kielivalinta löytyy myös asetuksista. Valinta tallentuu tähän laitteeseen ja toimii ilman nettiä.",
-        "Käyttöohje, palautelomake ja ottelukoosteet käyttävät valittua kieltä. Joukkueiden ja pelaajien nimiä tai itse kirjoitettuja tietoja ei käännetä."
+        "Käyttöohje ja palautelomake käyttävät sovelluksen kieltä. Koosteen ja kuvan kieli valitaan erikseen, ja jaetun linkin avaaja valitsee oman katselukielensä. Joukkueiden ja pelaajien nimiä tai itse kirjoitettuja tietoja ei käännetä."
       ]
     }
   ],
@@ -254,9 +259,29 @@ export const HELP_MESSAGES = {
     "en": "The <strong>Statistics</strong> tab shows team and player figures. A player’s points are their goals plus assists.",
     "sv": "Fliken <strong>Statistik</strong> visar lagens och spelarnas siffror. En spelares poäng är mål och assist tillsammans."
   },
-  "<strong>Ottelukuva</strong> tekee jaettavan PNG-kuvan. <strong>Tekstikooste</strong> sisältää kaikki tapahtumat ja tilastot; voit kopioida sen tai ladata tekstitiedoston. Koosteet syntyvät myös ilman verkkoyhteyttä.": {
-    "en": "<strong>Match image</strong> creates a PNG image to share. <strong>Text summary</strong> includes all events and statistics; copy it or download a text file. Both work offline too.",
-    "sv": "<strong>Matchbild</strong> skapar en PNG-bild som du kan dela. <strong>Textsammanfattning</strong> innehåller alla händelser och all statistik; kopiera den eller ladda ned en textfil. Båda fungerar också utan internet."
+  "<strong>Jaa ottelu</strong> tekee yhden kuvan ja katselulinkin samaan otteluun. Valitse ensin kuvan kieli: <strong>Suomi, English tai Svenska</strong>. Jaa sitten kuva ja linkki esimerkiksi WhatsApp-ryhmään.": {
+    "en": "<strong>Share match</strong> creates one image and a viewing link for the same match. First choose the image language: <strong>Suomi, English or Svenska</strong>. Then share the image and link, for example in a WhatsApp group.",
+    "sv": "<strong>Dela match</strong> skapar en bild och en visningslänk till samma match. Välj först bildens språk: <strong>Suomi, English eller Svenska</strong>. Dela sedan bilden och länken, till exempel i en WhatsApp-grupp."
+  },
+  "Linkin avaaja valitsee koostesivulla itse <strong>suomen, englannin tai ruotsin</strong>. Tunnusta ei tarvita. Katselu ei muuta vastaanottajan omaa ottelua tai kirjaussovelluksen kielivalintaa.": {
+    "en": "Anyone opening the link can choose <strong>Finnish, English or Swedish</strong> on the summary page. No account is needed. Viewing does not change the recipient’s own match or the recorder’s language setting.",
+    "sv": "Den som öppnar länken väljer själv <strong>finska, engelska eller svenska</strong> på sammanfattningssidan. Inget konto behövs. Visningen ändrar inte mottagarens egen match eller språkval i registreringsappen."
+  },
+  "Linkki näyttää <strong>jakamishetken tilanteen</strong>. Jos korjaat ottelua myöhemmin, jaa uusi linkki. Linkin saanut voi avata koosteen ja välittää linkin edelleen.": {
+    "en": "The link shows <strong>the match as it was when shared</strong>. If you correct the match later, share a new link. Anyone with the link can view the summary and forward the link.",
+    "sv": "Länken visar <strong>matchens läge när den delades</strong>. Om du rättar matchen senare behöver du dela en ny länk. Den som har länken kan se sammanfattningen och skicka länken vidare."
+  },
+  "<strong>Ottelukuva</strong> tekee erillisen PNG-kuvan. <strong>Tekstikooste</strong> sisältää kaikki tapahtumat ja tilastot; voit kopioida sen tai ladata tekstitiedoston. Kieli kysytään joka kerta, eikä valinta muuta sovelluksen käyttökieltä.": {
+    "en": "<strong>Match image</strong> creates a separate PNG image. <strong>Text summary</strong> includes all events and statistics; copy it or download a text file. You choose the language each time, without changing the app’s language.",
+    "sv": "<strong>Matchbild</strong> skapar en separat PNG-bild. <strong>Textsammanfattning</strong> innehåller alla händelser och all statistik; kopiera den eller ladda ned en textfil. Du väljer språk varje gång utan att ändra appens språk."
+  },
+  "Kuvan, tekstikoosteen ja linkin voi valmistella ilman nettiä. Viestin lähettäminen ja koostesivun ensimmäinen avaaminen tarvitsevat verkkoyhteyden.": {
+    "en": "You can prepare the image, text summary and link offline. Sending the message and opening the summary page for the first time need an internet connection.",
+    "sv": "Du kan förbereda bilden, textsammanfattningen och länken utan internet. För att skicka meddelandet och öppna sammanfattningssidan första gången behövs en internetanslutning."
+  },
+  "Jos jakokohde ei lisää linkkiä kuvan mukaan, käytä <strong>Kopioi linkki</strong> ja liitä linkki viestiin.": {
+    "en": "If the sharing app does not include the link with the image, use <strong>Copy link</strong> and paste the link into the message.",
+    "sv": "Om appen du delar till inte tar med länken tillsammans med bilden använder du <strong>Kopiera länk</strong> och klistrar in länken i meddelandet."
   },
   "Myös arkistoidun ottelun koosteet saa <strong>Ottelut</strong>-välilehdeltä.": {
     "en": "You can also create summaries of archived matches from the <strong>Matches</strong> tab.",
@@ -302,9 +327,9 @@ export const HELP_MESSAGES = {
     "en": "Use the language button in the header to choose <strong>Suomi, English or Svenska</strong>. You can also change the language in settings. Your choice is saved on this device and works offline.",
     "sv": "Välj <strong>Suomi, English eller Svenska</strong> med språkknappen högst upp. Språkvalet finns också i inställningarna. Ditt val sparas på den här enheten och fungerar utan internet."
   },
-  "Käyttöohje, palautelomake ja ottelukoosteet käyttävät valittua kieltä. Joukkueiden ja pelaajien nimiä tai itse kirjoitettuja tietoja ei käännetä.": {
-    "en": "The guide, feedback form and match summaries use your selected language. Team and player names and your own notes are not translated.",
-    "sv": "Bruksanvisningen, responsformuläret och matchsammanfattningarna använder det valda språket. Lag- och spelarnamn samt egen text översätts inte."
+  "Käyttöohje ja palautelomake käyttävät sovelluksen kieltä. Koosteen ja kuvan kieli valitaan erikseen, ja jaetun linkin avaaja valitsee oman katselukielensä. Joukkueiden ja pelaajien nimiä tai itse kirjoitettuja tietoja ei käännetä.": {
+    "en": "The guide and feedback form use the app’s language. Choose the summary and image language separately; anyone opening a shared link chooses their own viewing language. Team and player names and your own text are not translated.",
+    "sv": "Bruksanvisningen och responsformuläret använder appens språk. Sammanfattningens och bildens språk väljs separat, och den som öppnar en delad länk väljer sitt eget visningsspråk. Lag- och spelarnamn samt egen text översätts inte."
   },
   "Asennusohje: iPhone ja Android": {
     "en": "Installation: iPhone and Android",

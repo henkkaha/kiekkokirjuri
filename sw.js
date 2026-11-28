@@ -1,13 +1,16 @@
 /* Kiekkokirjuri: an immutable, complete offline shell for each release. */
-const RELEASE = '0.8.2';
+const RELEASE = '0.8.3';
 const SCOPE = new URL(self.registration.scope);
 const CACHE_PREFIX = `kiekkokirjuri:${SCOPE.pathname}:`;
 const CACHE_NAME = `${CACHE_PREFIX}${RELEASE}`;
 const INDEX_URL = new URL('./index.html', SCOPE).href;
+const SUMMARY_URL = new URL('./kooste.html', SCOPE).href;
+const PAGE_URLS = new Set([INDEX_URL, SUMMARY_URL]);
 const NAVIGATION_TIMEOUT_MS = 4000;
 const ASSET_TIMEOUT_MS = 15000;
 const ASSETS = [
   './index.html',
+  './kooste.html',
   `./styles.css?v=${RELEASE}`,
   `./help.css?v=${RELEASE}`,
   `./app.js?v=${RELEASE}`,
@@ -23,6 +26,10 @@ const ASSETS = [
   `./pwa-messages.js?v=${RELEASE}`,
   `./help-messages.js?v=${RELEASE}`,
   `./report-messages.js?v=${RELEASE}`,
+  `./shared-link.js?v=${RELEASE}`,
+  `./shared-viewer.js?v=${RELEASE}`,
+  `./shared-viewer.css?v=${RELEASE}`,
+  `./shared-messages.js?v=${RELEASE}`,
   './manifest.json',
   './assets/club-logo.svg',
   './assets/club-logo.png',
@@ -31,7 +38,7 @@ const ASSETS = [
   './assets/apple-touch-icon-kk.png',
 ].map(path => new URL(path, SCOPE).href);
 const ASSET_URLS = new Set(ASSETS);
-const MODULE_PATHS = new Set(['app.js', 'model.js', 'reports.js', 'pwa.js', 'help.js', 'feedback.js', 'i18n.js', 'ui-messages.js', 'domain-messages.js', 'model-messages.js', 'pwa-messages.js', 'help-messages.js', 'report-messages.js', 'styles.css', 'help.css']
+const MODULE_PATHS = new Set(['app.js', 'model.js', 'reports.js', 'pwa.js', 'help.js', 'feedback.js', 'i18n.js', 'ui-messages.js', 'domain-messages.js', 'model-messages.js', 'pwa-messages.js', 'help-messages.js', 'report-messages.js', 'styles.css', 'help.css', 'shared-link.js', 'shared-viewer.js', 'shared-viewer.css', 'shared-messages.js']
   .map(path => new URL(path, SCOPE).pathname));
 
 function belongsToScope(url) {
@@ -123,10 +130,12 @@ self.addEventListener('install', event => {
       return response;
     }));
 
-    const html = await responses[0].clone().text();
-    const marker = html.match(/<meta\s+name=["']app-version["']\s+content=["']([^"']+)["'][^>]*>/i);
-    if (!marker || marker[1] !== RELEASE) {
-      throw new Error('The page and service worker belong to different releases.');
+    for (const pageURL of PAGE_URLS) {
+      const html = await responses[ASSETS.indexOf(pageURL)].clone().text();
+      const marker = html.match(/<meta\s+name=["']app-version["']\s+content=["']([^"']+)["'][^>]*>/i);
+      if (!marker || marker[1] !== RELEASE) {
+        throw new Error('The page and service worker belong to different releases.');
+      }
     }
 
     const existed = (await caches.keys()).includes(CACHE_NAME);
@@ -153,7 +162,11 @@ self.addEventListener('activate', event => {
 
 async function navigate(request) {
   const cache = await caches.open(CACHE_NAME);
-  const installed = await cache.match(INDEX_URL);
+  // The shared summary is a separate read-only application. Never replace it
+  // with the recorder, including offline or when the URL contains a fragment.
+  const pageURL = new URL(request.url).pathname === new URL(SUMMARY_URL).pathname
+    ? SUMMARY_URL : INDEX_URL;
+  const installed = await cache.match(pageURL);
   if (installed) return installed;
   try { return await fetchFresh(request, NAVIGATION_TIMEOUT_MS); }
   catch { return Response.error(); }

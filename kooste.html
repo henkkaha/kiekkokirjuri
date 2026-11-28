@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="fi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#000032">
+  <meta name="app-version" content="0.8.3">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta name="description" content="Kiekkokirjurin ottelukooste – Suomi, English, Svenska.">
+  <link rel="icon" type="image/png" sizes="192x192" href="./assets/icon-kk-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon-kk.png">
+  <link rel="stylesheet" href="./shared-viewer.css?v=0.8.3">
+  <title>Ottelukooste · Kiekkokirjuri</title>
+</head>
+<body>
+  <a class="skip-link" href="#summary" id="skip-link">Siirry sisältöön</a>
+  <header class="viewer-header">
+    <div class="viewer-header-inner">
+      <a class="viewer-brand" href="./" target="_blank" rel="noopener noreferrer" id="brand-link">
+        <img src="./assets/icon-kk-192.png" width="36" height="36" alt="">
+        <span>Kiekkokirjuri<span class="brand-dot">.</span><small id="header-caption">Ottelukooste</small></span>
+      </a>
+      <nav class="language-picker" aria-label="Kieli / Language / Språk" id="viewer-languages">
+        <button type="button" data-language="fi" lang="fi" aria-pressed="true">Suomi</button>
+        <button type="button" data-language="en" lang="en" aria-pressed="false">English</button>
+        <button type="button" data-language="sv" lang="sv" aria-pressed="false">Svenska</button>
+      </nav>
+    </div>
+  </header>
+  <main id="summary" class="summary-main" tabindex="-1" aria-busy="true">
+    <section class="message-card"><p>Avataan ottelukoostetta… / Opening match summary… / Öppnar matchreferatet…</p></section>
+  </main>
+  <footer class="viewer-footer" id="viewer-footer"></footer>
+  <div class="viewer-notice" id="viewer-notice" role="status" aria-live="polite" hidden></div>
+  <noscript><p class="message-card">Ota JavaScript käyttöön. / Enable JavaScript. / Aktivera JavaScript.</p></noscript>
+  <script type="module" src="./shared-viewer.js?v=0.8.3"></script>
+</body>
+</html>

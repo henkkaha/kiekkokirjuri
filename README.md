@@ -4,7 +4,17 @@ Offline-ottelukirjuri Kiekko-Espoon väreissä. Julkaistu GitHub Pagesiin:
 
 **https://henkkaha.github.io/kiekkokirjuri/**
 
-Versio **0.8.2**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
+Versio **0.8.3**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
+
+### Päivitys 0.8.3: yksi kuva ja monikielinen ottelulinkki
+
+**Tilastot → Jaa ottelu** tekee valitulla kielellä yhden ottelukuvan ja mukaan katselulinkin. Myös arkistoidun ottelun voi jakaa. Linkin avaaja valitsee sivun yläreunasta **Suomi · English · Svenska**, näkee tuloksen, maalintekijät, syöttäjät ja tilastot sekä voi ladata oman kuvan tai tekstikoosteen. Katselusivu ei muuta vastaanottajan kirjaussovelluksen ottelua tai kieliasetusta. Kuvan ja tekstikoosteen kieli kysytään joka viennillä erikseen.
+
+Kuva ja linkki käyttävät samaa jakamishetkellä talteen otettua ottelua. Linkki ei päivity myöhemmistä kirjauksista: korjauksen jälkeen jaetaan uusi linkki. Linkki sisältää vain kyseisen ottelun koostetiedot, ei muita arkistoituja otteluita, palauteluonnoksia tai ottelun yleisiä muistiinpanoja. Se on avattavissa ja edelleen jaettavissa kaikille, joilla linkki on.
+
+Kuvan, tekstin ja linkin valmistelu toimii offline-tilassa. Viestin lähettäminen ja vastaanottajan ensimmäinen käynti tarvitsevat yhteyden. Puhelimen jakovalikko välittää kuvan ja linkin yhdessä, jos kohdesovellus tukee yhdistelmää; tarvittaessa linkki liitetään viestiin erillisellä **Kopioi linkki** -painikkeella. Aiemmin asennettu sovellus päivitetään normaalisti asetusten päivitystoiminnolla versioon 0.8.3.
+
+Varmennus: kaikki **91 automaattista testiä** ja JavaScriptin syntaksitarkistukset läpäistiin. Selaimessa tarkistettiin nykyisen ja arkistoidun ottelun jakaminen, kaikki kolme katselukieltä, englanninkielinen kuva ja ruotsinkielinen tekstikooste sekä sovelluksen käyttökielen säilyminen. Katselusivun TXT- ja PNG-lataukset toimivat. Virheellinen linkki näyttää käännetyn ilmoituksen. Ulkoasu tarkistettiin 320 ja 440 pikselin leveyksillä simuloiduin iPhonen turva-aluein sekä työpöytäkoossa. Testipalvelin pysäytettiin: sovellus ja katselusivu latautuivat uudelleen, uuden jakolinkin ja kuvan luominen onnistui sekä katselukielen vaihto ja PNG-lataus toimivat ilman palvelinta. Fyysistä iPhonea, Android-laitetta tai WhatsApp-lähetystä ei testattu tässä ympäristössä.
 
 ### Päivitys 0.8.2: yhden ruudun kirjausnäkymä
 
@@ -69,7 +79,19 @@ Turva-alueiden toteutus noudattaa [WebKitin ohjetta](https://webkit.org/blog/792
 3. Lisää pelaajien numerot ja halutessasi sukunimet **Pelaajat**-välilehdellä. Numeroita ja nimiä voi täydentää myös jälkikäteen. Numero 0 on sallittu, ja sama numero voi kuulua eri joukkueiden pelaajille.
 4. Käynnistä erä. Kello laskee alaspäin. Pysäytä se pelikatkoilla; kellon asetuksista voi korjata jäljellä olevan ajan tai valmistella seuraavan erän.
 5. Kirjaa torjunta suoraan torjuneen joukkueen värillisestä **Torjunta**-painikkeesta. Maalille ja jäähylle valitaan tapahtuma, joukkue ja lisätiedot; maalille voi valita enintään kaksi syöttäjää. Tapahtuma-aika otetaan ensimmäisestä painalluksesta.
-6. **Tilastot** näyttää joukkue- ja pelaajatilastot sekä tekstin ja PNG-kuvan viennin. **Ottelut** näyttää arkiston ja varmuuskopion viennin/palautuksen.
+6. **Tilastot → Jaa ottelu** tekee yhden kuvan ja katselulinkin. Valitse kuvan kieli suomeksi, englanniksi tai ruotsiksi. Myös erillinen tekstin ja PNG-kuvan vienti on käytettävissä. **Ottelut** näyttää arkiston ja varmuuskopion viennin/palautuksen; arkistoidusta ottelusta voi tehdä saman jaon.
+
+### Yksi ottelukuva ja monikielinen katselulinkki
+
+Valitse **Jaa ottelu**, sitten kuvan kieli **Suomi / English / Svenska**. Samasta ottelun tilanteesta valmistuvat PNG-kuva ja linkki katselusivulle. Jaa kuva ja linkki esimerkiksi WhatsApp-ryhmään. Jos jakokohde ei liitä linkkiä kuvan mukaan, **Kopioi linkki** mahdollistaa sen liittämisen viestiin erikseen. Kuvan voi myös ladata tiedostoksi.
+
+Vastaanottaja avaa linkin ja valitsee koostesivun näkyvistä kielipainikkeista suomen, englannin tai ruotsin. Katselusivu ei tarvitse tunnusta eikä muuta vastaanottajan oman kirjaussovelluksen ottelua tai kieliasetusta. Sivulta voi myös ladata kuvan tai tekstikoosteen valitulla kielellä.
+
+Linkki näyttää **jakamishetken tilanteen**, eikä se päivity myöhempien korjausten mukana. Korjatusta ottelusta jaetaan uusi linkki. Linkin saanut voi lukea ottelun tiedot ja välittää linkin edelleen. Ottelun yleisiä muistiinpanoja, arkistoa tai sovelluksen asetuksia ei sisällytetä katselulinkkiin.
+
+Kuva, tekstikooste ja linkki muodostuvat laitteessa myös ilman verkkoyhteyttä. Viestin lähettäminen ja vastaanottajan ensimmäinen käynti koostesivulla tarvitsevat yhteyden. Sovellus tallentaa myös katselusivun ja sen kielitiedostot offline-käyttöä varten.
+
+Teknisesti linkki sisältää versioidun, pakatun ottelun tiedot URL-fragmentissa. Erillistä tietokantaa tai julkaisupalvelua ei käytetä, joten linkki voi olla tavallista pidempi. Tiedot validoidaan ennen näyttämistä, ja liian suuri kooste hylätään selkeällä virheellä: tapahtumia ei jätetä pois linkin lyhentämiseksi. Koostesivu on erillinen sovellus, joka ei lataa ottelukirjaimen `app.js`-moduulia.
 
 ### Kieli: Suomi, English tai Svenska
 
@@ -77,7 +99,7 @@ Version 0.7.0 käyttöliittymä, käyttöohje, palautteen esikatselu, tekstikoos
 
 Ensimmäisellä avauksella sovellus käyttää laitteen ensisijaista tuettua kieltä. Jos laitteen kielistä mikään ei ole suomi, englanti tai ruotsi, oletuskieli on englanti. Oma tallennettu valinta ohittaa laitteen kielen. Kaikki kolme kieliversiota sisältyvät samaan offline-asennukseen, joten kielen vaihtaminen ei tarvitse verkkoyhteyttä tai uutta sovelluspäivitystä.
 
-Ottelutiedostojen tapahtumatyypit ja valmiit jäähytiedot säilyvät alkuperäisessä muodossa. Niiden näyttöteksti käännetään valitulle kielelle; omia kuvauksia ja nimiä ei konekäännetä. Saman ottelun voi viedä eri kielillä vaihtamalla sovelluksen kielen ennen koosteen avaamista. Sovelluksen nimi pysyy kaikilla kielillä **Kiekkokirjuri**.
+Ottelutiedostojen tapahtumatyypit ja valmiit jäähytiedot säilyvät alkuperäisessä muodossa. Niiden näyttöteksti käännetään valitulle kielelle; omia kuvauksia ja nimiä ei konekäännetä. Kuvaa tai tekstikoostetta avattaessa valitaan erikseen suomi, englanti tai ruotsi joka kerta; valinta ei muuta sovelluksen käyttökieltä. Jaetun katselulinkin avaaja valitsee oman kielensä koostesivulla. Sovelluksen nimi pysyy kaikilla kielillä **Kiekkokirjuri**.
 
 ### Torjunta yhdellä painalluksella
 
@@ -155,6 +177,8 @@ Avaa `/kiekkokirjuri/` localhost-osoitteessa. Service worker toimii localhostiss
 | `model.js` | Ajanlaskenta, tilastot, validointi ja vanhojen tietojen siirto |
 | `i18n.js`, `*-messages.js` | Kielivalinta ja paikalliset suomi–englanti–ruotsi-käännökset |
 | `reports.js` | Täydellinen tekstiraportti ja paikallisesti luotu PNG-kooste |
+| `shared-link.js` | Sallitun otteludatan pakkaus katselulinkkiin ja linkin rajattu validointi |
+| `kooste.html`, `shared-viewer.js`, `shared-viewer.css` | Erillinen vain katseluun tarkoitettu monikielinen ottelukooste |
 | `help.js`, `help.css` | Offline-käyttöohje ja palautteen aloitusvalinnat |
 | `feedback.js` | Palauteluonnoksen validointi, viestin muodostus ja sähköpostilinkin koodaus |
 | `pwa.js`, `sw.js` | Offline-valmius, versioidut resurssit ja hallittu päivitys |

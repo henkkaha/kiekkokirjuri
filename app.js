@@ -1,15 +1,16 @@
 import { VERSION, createGame, normalizeState, elapsed, elapsedPrecise, formatTime, score, teamStats,
   playerStats, periodStats, archiveAndNew, openArchive, validateEvent,
-  normalizeNumber, nextPeriod, snapshot, getActiveGoalie, setActiveGoalie, recordSave, TEAM_COLORS, getTeamColor, setTeamColor } from './model.js?v=0.8.2';
-import { setupPWA, checkForUpdate, refreshPWALanguage } from './pwa.js?v=0.8.2';
-import { textReport, createPoster } from './reports.js?v=0.8.2';
-import { renderHelp } from './help.js?v=0.8.2';
+  normalizeNumber, nextPeriod, snapshot, getActiveGoalie, setActiveGoalie, recordSave, TEAM_COLORS, getTeamColor, setTeamColor } from './model.js?v=0.8.3';
+import { setupPWA, checkForUpdate, refreshPWALanguage } from './pwa.js?v=0.8.3';
+import { textReport, createPoster } from './reports.js?v=0.8.3';
+import { prepareSharedGame, createMatchLink } from './shared-link.js?v=0.8.3';
+import { renderHelp } from './help.js?v=0.8.3';
 import { FEEDBACK_STORAGE_KEY, FEEDBACK_KINDS, getFeedbackKinds, FEEDBACK_LIMITS, createFeedbackDraft,
-  normalizeFeedbackDraft, validateFeedbackDraft, buildFeedbackEmail } from './feedback.js?v=0.8.2';
+  normalizeFeedbackDraft, validateFeedbackDraft, buildFeedbackEmail } from './feedback.js?v=0.8.3';
 
-import { LANGUAGE_STORAGE_KEY, LANGUAGES, getLanguage, getLocale, resolveLanguage, setLanguage } from './i18n.js?v=0.8.2';
-import { uiText as tr } from './ui-messages.js?v=0.8.2';
-import { domainText } from './domain-messages.js?v=0.8.2';
+import { LANGUAGE_STORAGE_KEY, LANGUAGES, getLanguage, getLocale, resolveLanguage, setLanguage } from './i18n.js?v=0.8.3';
+import { uiText as tr } from './ui-messages.js?v=0.8.3';
+import { domainText } from './domain-messages.js?v=0.8.3';
 
 let savedLanguage = null;
 try { savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY); } catch { /* Language remains usable in memory. */ }
@@ -78,6 +79,9 @@ let goalieSelection = null;
 let editingPlayer = null;
 let confirmAction = null;
 let reportGame = null;
+let reportLanguage = null;
+let exportRequest = null;
+let sharedMatchURL = null;
 let posterBlob = null;
 let posterURL = null;
 let toastTimer = null;
@@ -374,7 +378,7 @@ function renderStats() {
     ${comparison(tr("Maalit"),stats.home.goals,stats.away.goals)}${comparison(tr("Laukaukset maalia kohti"),stats.home.shots,stats.away.shots)}${comparison(tr("Torjunnat"),stats.home.saves,stats.away.saves)}${comparison(tr("Rangaistusminuutit"),stats.home.penaltyMinutes,stats.away.penaltyMinutes)}
     <table class="period-table"><caption class="sr-only">${tr("Maalit erissä")}</caption><thead><tr><th>${tr("Erä")}</th><th>${escapeHTML(displayTeam(state,'home'))}</th><th>${escapeHTML(displayTeam(state,'away'))}</th></tr></thead><tbody>${periods.map(p=>`<tr><td>${tr('{period}. erä',{period:p.period})}</td><td>${p.home}</td><td>${p.away}</td></tr>`).join('')}</tbody></table>
     <p class="table-legend">${tr("Laukaukset maalia kohti = omat maalit + vastustajan torjunnat. Ohi menneitä tai blokattuja yrityksiä ei lasketa mukaan.")}</p></section>
-    <section class="export-card"><h3>${tr("Ottelun tarina talteen.")}</h3><p>${tr("Jaa siisti ottelukuva tai vie koko tapahtumalista tekstinä.")}</p><div class="export-actions"><button class="button" data-action="poster">${icon('image')}${tr("Ottelukuva")}</button><button class="button" data-action="report">${icon('text')}${tr("Tekstikooste")}</button></div></section></div>
+    <section class="export-card"><h3>${tr("Ottelun tarina talteen.")}</h3><p>${tr("Yksi kuva ja linkki. Jokainen katsoo koosteen omalla kielellään.")}</p><button class="button share-match-primary" data-action="share-match">${icon('share')}${tr("Jaa ottelu")}</button><div class="export-actions"><button class="button" data-action="poster">${icon('image')}${tr("Ottelukuva")}</button><button class="button" data-action="report">${icon('text')}${tr("Tekstikooste")}</button></div></section></div>
     <section class="panel content-panel"><div class="section-heading"><h2>${tr("Pelaajatilastot")}</h2></div>${teamTabs(statsTeam,'stats-team')}${players.length?`<div class="table-scroll"><table class="player-table"><caption class="sr-only">${escapeHTML(tr('{team}: pelaajatilastot',{team:displayTeam(state,statsTeam)}))}</caption><thead><tr><th>${tr("Pelaaja")}</th><th><abbr title="${tr("Maalit")}">${tr("M")}</abbr></th><th><abbr title="${tr("Syötöt")}">${tr("S")}</abbr></th><th><abbr title="${tr("Pisteet")}">${tr("P")}</abbr></th><th><abbr title="${tr("Torjunnat")}">${tr("T")}</abbr></th><th><abbr title="${tr("Jäähyminuutit")}">${tr("JM")}</abbr></th></tr></thead><tbody>${players.map(p=>`<tr><td><span class="table-player"><b>${p.n}</b>${escapeHTML(p.name||'—')}</span></td><td>${p.goals}</td><td>${p.assists}</td><td>${p.points}</td><td>${p.saves}</td><td>${p.penaltyMinutes}</td></tr>`).join('')}</tbody></table></div><p class="table-legend">${tr("M = maalit · S = syötöt · P = pisteet")}<br>${tr("T = torjunnat · JM = jäähyminuutit")}</p>`:empty('chart',tr("Numerot kertovat pelistä."),tr("Lisää pelaajat kokoonpanoon tai merkitse numero tapahtuman yhteydessä. Tilastot kertyvät automaattisesti."))}</section></div>`;
 }
 function archiveCard(game,current=false) {
@@ -405,6 +409,8 @@ function closeSheet() {
   goalieSelection = null;
   editingPlayer = null;
   confirmAction = null;
+  exportRequest = null;
+  sharedMatchURL = null;
   if (posterURL) { URL.revokeObjectURL(posterURL); posterURL=null; }
   posterBlob = null;
   if(externalConflict)adoptExternal(externalConflict.raw);
@@ -810,7 +816,7 @@ function showArchive(id) {
   if(!game)return;
   reportGame=game;
   const goals=score(game), stats=teamStats(game);
-  openSheet(tr("Tallennettu ottelu"),dateLabel(game,true),`<h3 style="text-align:center">${escapeHTML(displayTeam(game,'home'))} – ${escapeHTML(displayTeam(game,'away'))}</h3><div style="text-align:center;font-size:60px;font-weight:850;letter-spacing:-3px;margin:12px 0;color:var(--navy)">${goals.home} : ${goals.away}</div><div class="helper-box" style="text-align:center">${tr("Laukaukset maalia kohti")} ${stats.home.shots}–${stats.away.shots}<br>${tr("Torjunnat")} ${stats.home.saves}–${stats.away.saves}<br>${tr('{count} tapahtumaa',{count:game.events.length})} · ${tr('{count} pelaajaa',{count:game.roster.length})}</div><div class="form-grid" style="margin-top:18px"><button class="button" data-action="archive-poster" type="button">${icon('image')}${tr("Ottelukuva")}</button><button class="button" data-action="archive-report" type="button">${icon('text')}${tr("Tekstikooste")}</button></div><p class="field-note" style="margin-top:18px">${tr("Avaaminen siirtää nykyisen ottelun arkistoon. Voit sen jälkeen tarkastella ja korjata tämän pelin tapahtumia.")}</p>`,
+  openSheet(tr("Tallennettu ottelu"),dateLabel(game,true),`<h3 style="text-align:center">${escapeHTML(displayTeam(game,'home'))} – ${escapeHTML(displayTeam(game,'away'))}</h3><div style="text-align:center;font-size:60px;font-weight:850;letter-spacing:-3px;margin:12px 0;color:var(--navy)">${goals.home} : ${goals.away}</div><div class="helper-box" style="text-align:center">${tr("Laukaukset maalia kohti")} ${stats.home.shots}–${stats.away.shots}<br>${tr("Torjunnat")} ${stats.home.saves}–${stats.away.saves}<br>${tr('{count} tapahtumaa',{count:game.events.length})} · ${tr('{count} pelaajaa',{count:game.roster.length})}</div><button class="button primary wide archive-share" data-action="archive-share" type="button">${icon('share')}${tr("Jaa ottelu")}</button><div class="form-grid" style="margin-top:12px"><button class="button" data-action="archive-poster" type="button">${icon('image')}${tr("Ottelukuva")}</button><button class="button" data-action="archive-report" type="button">${icon('text')}${tr("Tekstikooste")}</button></div><p class="field-note" style="margin-top:18px">${tr("Avaaminen siirtää nykyisen ottelun arkistoon. Voit sen jälkeen tarkastella ja korjata tämän pelin tapahtumia.")}</p>`,
     `<button class="button quiet" type="button" data-action="close-sheet">${tr("Sulje")}</button><button class="button primary" type="button" data-action="open-archive" data-id="${escapeHTML(id)}">${tr("Avaa ottelu")}${icon('arrow')}</button>`);
 }
 function showMenu() {
@@ -1034,29 +1040,77 @@ async function restoreFile(file) {
     closeSheet();releaseWakeLock();navigate('ottelu');render();notify(tr("Varmuuskopio palautettu. Kello on pysäytetty."));
   },tr("Palauta ottelut"));
 }
-function showReport(game=state) {
+function chooseExportLanguage(kind, game=state) {
+  // Capture once before any asynchronous work or language choice. Image and link
+  // must describe the same moment, including when the live clock keeps running.
+  exportRequest={kind,game:snapshot(game)};
+  const image=kind!=='report';
+  openSheet(tr(image?"Millä kielellä kuva?":"Millä kielellä tekstikooste?"),
+    tr(kind==='share'?"Linkin avaaja valitsee oman kielensä.":"Valinta koskee vain tätä koostetta."),
+    `<div class="language-options" role="group" aria-label="${tr('Koosteen kieli')}">${LANGUAGES.map(language=>`<button type="button" class="language-option" data-action="export-language" data-language="${language.code}"><span class="language-code" aria-hidden="true">${language.code.toUpperCase()}</span><span lang="${language.code}">${language.name}</span>${icon(image?'image':'text')}</button>`).join('')}</div><p class="language-note">${tr("Sovelluksen käyttökieli säilyy ennallaan.")}</p>`,
+    `<button type="button" class="button quiet" data-action="close-sheet">${tr("Peruuta")}</button>`);
+}
+async function generateExport(language) {
+  if(!exportRequest||!LANGUAGES.some(item=>item.code===language))return;
+  const request=exportRequest;
+  exportRequest=null;
+  if(request.kind==='report')showReport(request.game,language);
+  else await showPoster(request.game,language,request.kind==='share');
+}
+function exportLanguageName() { return LANGUAGES.find(item=>item.code===reportLanguage)?.name||''; }
+function showReport(game, language) {
   reportGame=snapshot(game);
-  openSheet(tr("Ottelukooste"),tr("Koko ottelu tekstinä."),`<textarea class="report-text" id="report-text" readonly aria-label="${tr("Ottelun tekstikooste")}">${escapeHTML(textReport(reportGame))}</textarea>`,
+  reportLanguage=language;
+  sharedMatchURL=null;
+  openSheet(tr("Ottelukooste"),tr('Koosteen kieli: {language}',{language:exportLanguageName()}),`<textarea class="report-text" id="report-text" readonly lang="${language}" aria-label="${tr("Ottelun tekstikooste")}">${escapeHTML(textReport(reportGame,language))}</textarea>`,
     `<button class="button" type="button" data-action="download-report">${icon('download')}${tr("Lataa .txt")}</button><button class="button primary" type="button" data-action="copy-report">${icon('text')}${tr("Kopioi teksti")}</button>`);
 }
-async function showPoster(game=state) {
-  reportGame=snapshot(game);
-  const token=openSheet(tr("Ottelukuva"),tr("Valmistellaan jaettavaa koostetta…"),empty('image',tr("Hetki, kuva valmistuu."),tr("Kuva luodaan tällä laitteella. Myös ilman verkkoyhteyttä.")));
+function matchLinkError(error) {
+  return tr(error?.code==='SHARE_TOO_LARGE'
+    ?"Ottelu on liian suuri yhteen linkkiin. Voit silti jakaa kuvan ja tekstikoosteen."
+    :"Koostelinkin luominen epäonnistui. Voit silti jakaa kuvan ja tekstikoosteen.");
+}
+async function showPoster(game, language, includeLink=false) {
+  let linkIssue=null;
+  try {reportGame=includeLink?prepareSharedGame(game):snapshot(game);}
+  catch(error){linkIssue=error;reportGame=snapshot(game);}
+  reportLanguage=language;
+  sharedMatchURL=null;
+  const token=openSheet(tr(includeLink?"Jaa ottelu":"Ottelukuva"),tr("Valmistellaan jaettavaa koostetta…"),empty('image',tr("Hetki, kuva valmistuu."),tr("Kuva luodaan tällä laitteella. Myös ilman verkkoyhteyttä.")));
   const requestedGame=reportGame;
-  const blob=await createPoster(requestedGame);
+  let blob,link;
+  try {
+    [blob,link]=await Promise.all([
+      createPoster(requestedGame,language),
+      includeLink?(linkIssue?{error:linkIssue}:createMatchLink(requestedGame,location.href).then(url=>({url})).catch(error=>({error}))):null,
+    ]);
+  } catch(error) {
+    if(!$('sheet').open || sheetToken!==token || reportGame!==requestedGame)return;
+    throw error;
+  }
   if(!$('sheet').open || sheetToken!==token || reportGame!==requestedGame) return;
   posterBlob=blob;
+  sharedMatchURL=link?.url||null;
   if(posterURL)URL.revokeObjectURL(posterURL);
   posterURL=URL.createObjectURL(blob);
-  openSheet(tr("Ottelukuva"),tr("Valmis jaettavaksi."),`<div class="poster-wrap"><img class="poster-preview" src="${posterURL}" alt="${escapeHTML(tr('Ottelukooste: {home} vastaan {away}',{home:displayTeam(game,'home'),away:displayTeam(game,'away')}))}"></div>`,
-    `<button class="button" type="button" data-action="download-poster">${icon('download')}${tr("Lataa PNG")}</button><button class="button primary" type="button" data-action="share-poster">${icon('share')}${tr("Jaa kuva")}</button>`);
+  const linkControls=sharedMatchURL?`<div class="shared-link-card"><h3>${tr("Yksi kuva, kolme kieltä.")}</h3><p>${tr("Linkin avaaja valitsee suomen, englannin tai ruotsin. Kirjautumista ei tarvita.")}</p><div class="shared-link-actions"><a class="button" href="${escapeHTML(sharedMatchURL)}" target="_blank" rel="noopener">${tr("Avaa kooste")}</a><button class="button" type="button" data-action="copy-match-link">${icon('text')}${tr("Kopioi linkki")}</button></div><textarea id="match-link" class="report-text shared-link-text" readonly hidden aria-label="${tr("Koostelinkki")}">${escapeHTML(sharedMatchURL)}</textarea><p class="field-note">${tr("Linkki näyttää jakamishetken tilanteen. Jos korjaat ottelua, jaa uusi linkki.")}</p></div>`:'';
+  openSheet(tr(includeLink?"Jaa ottelu":"Ottelukuva"),tr('Kuvan kieli: {language}',{language:exportLanguageName()}),`${linkControls}<div class="poster-wrap"><img class="poster-preview" src="${posterURL}" alt="${escapeHTML(tr('Ottelukooste: {home} vastaan {away}',{home:displayTeam(requestedGame,'home'),away:displayTeam(requestedGame,'away')}))}"></div>${sharedMatchURL?`<p class="field-note share-target-note">${tr("Jos WhatsAppiin siirtyy vain kuva, liitä viestiin linkki Kopioi linkki -painikkeella.")}</p>`:''}${link?.error?`<p class="helper-box">${escapeHTML(matchLinkError(link.error))}</p>`:''}`,
+    `<button class="button" type="button" data-action="download-poster">${icon('download')}${tr("Lataa PNG")}</button><button class="button primary" type="button" data-action="share-poster">${icon('share')}${tr(sharedMatchURL?"Jaa kuva ja linkki":"Jaa kuva")}</button>`);
+}
+async function copyMatchLink() {
+  if(!sharedMatchURL)return;
+  try {await navigator.clipboard.writeText(sharedMatchURL);notify(tr("Koostelinkki kopioitu. Liitä se WhatsApp-viestiin."));}
+  catch {const field=$('match-link');if(field){field.hidden=false;field.select();}formError(tr("Valitse ja kopioi linkki käsin."));}
 }
 async function sharePoster() {
   if(!posterBlob||!reportGame)return;
-  const file=new File([posterBlob],safeFilename(reportGame,'ottelukooste.png'),{type:'image/png'});
-  if(navigator.canShare?.({files:[file]})&&navigator.share) {
-    try {await navigator.share({files:[file],title:tr("Ottelukooste")});} catch(error){if(error.name!=='AbortError')formError(tr("Jakaminen ei onnistunut. Voit ladata kuvan PNG-tiedostona."));}
-  } else {download(posterBlob,file.name);notify(tr("Kuva ladattu. Voit jakaa sen laitteen tiedostoista."));}
+  const file=new File([posterBlob],safeFilename(reportGame,`ottelukooste-${reportLanguage}.png`),{type:'image/png'});
+  const goals=score(reportGame);
+  const data={files:[file],title:tr("Ottelukooste")};
+  if(sharedMatchURL){data.url=sharedMatchURL;data.text=`${displayTeam(reportGame,'home')} ${goals.home}–${goals.away} ${displayTeam(reportGame,'away')}\nSuomi · English · Svenska`;}
+  if(navigator.canShare?.(data)&&navigator.share) {
+    try {await navigator.share(data);} catch(error){if(error.name!=='AbortError')formError(tr(sharedMatchURL?"Jakaminen ei onnistunut. Lataa PNG-kuva ja kopioi linkki viestiin.":"Jakaminen ei onnistunut. Voit ladata kuvan PNG-tiedostona."));}
+  } else {download(posterBlob,file.name);notify(tr(sharedMatchURL?"Kuva ladattu. Kopioi lisäksi linkki WhatsApp-viestiin.":"Kuva ladattu. Voit jakaa sen laitteen tiedostoista."));}
 }
 function navigate(destination) {
   if(view===destination)return;
@@ -1119,13 +1173,17 @@ document.addEventListener('click',async event=>{
       case 'open-archive':if(persist(openArchive(state,id))){closeSheet();releaseWakeLock();navigate('ottelu');render();notify(tr("Tallennettu ottelu avattu."));}break;
       case 'backup':backup();break;
       case 'restore':$('restore-file').value='';$('restore-file').click();break;
-      case 'report':showReport();break;
-      case 'archive-report':showReport(reportGame);break;
-      case 'poster':await showPoster();break;
-      case 'archive-poster':await showPoster(reportGame);break;
-      case 'download-report':download(new Blob([textReport(reportGame)],{type:'text/plain;charset=utf-8'}),safeFilename(reportGame,'ottelukooste.txt'));break;
-      case 'copy-report':try{await navigator.clipboard.writeText(textReport(reportGame));notify(tr("Ottelukooste kopioitu."));}catch{$('report-text').select();formError(tr("Valitse ja kopioi teksti käsin. Selain ei sallinut automaattista kopiointia."));}break;
-      case 'download-poster':if(posterBlob)download(posterBlob,safeFilename(reportGame,'ottelukooste.png'));break;
+      case 'share-match':chooseExportLanguage('share');break;
+      case 'archive-share':chooseExportLanguage('share',reportGame);break;
+      case 'report':chooseExportLanguage('report');break;
+      case 'archive-report':chooseExportLanguage('report',reportGame);break;
+      case 'poster':chooseExportLanguage('poster');break;
+      case 'archive-poster':chooseExportLanguage('poster',reportGame);break;
+      case 'export-language':await generateExport(button.dataset.language);break;
+      case 'copy-match-link':await copyMatchLink();break;
+      case 'download-report':download(new Blob([textReport(reportGame,reportLanguage)],{type:'text/plain;charset=utf-8'}),safeFilename(reportGame,`ottelukooste-${reportLanguage}.txt`));break;
+      case 'copy-report':try{await navigator.clipboard.writeText(textReport(reportGame,reportLanguage));notify(tr("Ottelukooste kopioitu."));}catch{$('report-text').select();formError(tr("Valitse ja kopioi teksti käsin. Selain ei sallinut automaattista kopiointia."));}break;
+      case 'download-poster':if(posterBlob)download(posterBlob,safeFilename(reportGame,`ottelukooste-${reportLanguage}.png`));break;
       case 'share-poster':await sharePoster();break;
       case 'install-help':showInstallHelp();break;
       case 'check-update':{button.disabled=true;try{const result=await checkForUpdate();notify(result?.updateAvailable?tr("Uusi versio on valmis ladattavaksi."):result?.state==='error'||!result?.online?result?.message||tr("Päivityksen tarkistaminen vaatii verkkoyhteyden."):tr('Käytössä on uusin versio {version}.',{version:VERSION}));}finally{button.disabled=false;}break;}

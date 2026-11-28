@@ -116,7 +116,7 @@ test('default opponent placeholder is translated for display without changing st
 
 test('poster generation captures its chosen language across asynchronous image loading', async () => {
   const { createPoster, REPORT_MESSAGES } = await import('../reports.js');
-  const { setLanguage } = await import('../i18n.js?v=0.8.2');
+  const { setLanguage } = await import('../i18n.js?v=0.8.3');
   const originalDocument = globalThis.document;
   const originalImage = globalThis.Image;
   const labels = [];

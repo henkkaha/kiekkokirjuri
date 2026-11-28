@@ -237,6 +237,17 @@ html{scrollbar-gutter:stable}
 @media(max-width:380px){.clock-strip{grid-template-columns:minmax(0,1fr);gap:12px}.clock-info{justify-content:space-between}.clock-value{font-size:40px}.quick-save-action{grid-template-columns:17px minmax(0,1fr) 3.4ch;font-size:13px;gap:4px}.quick-save-action svg{width:17px;height:17px}}
 
 /* The match is one stationary console. Only its event history can scroll. */
+.export-card .share-match-primary{width:100%;margin-bottom:10px;background:var(--yellow);color:var(--navy);border-color:var(--yellow);min-height:50px}
+.export-card .export-actions .button:first-child{background:#ffffff0b;border-color:#ffffff20;color:white}
+.archive-share{margin-top:18px}
+.shared-link-card{padding:18px;border:1px solid #d5e2f7;border-radius:16px;background:#f2f6fe;margin-bottom:18px}
+.shared-link-card h3{font-size:17px;line-height:1.4;margin:0 0 7px}
+.shared-link-card>p{font-size:14px;line-height:1.65;color:var(--muted);margin:0}
+.shared-link-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:14px 0}
+.shared-link-actions .button{min-width:0;min-height:44px;font-size:13px;padding:9px 10px;gap:5px}
+.shared-link-card .field-note,.share-target-note{font-size:12px;line-height:1.6}
+.share-target-note{margin-top:14px}
+.shared-link-text{min-height:90px;font-size:12px;margin-bottom:12px;overflow-wrap:anywhere}
 html.recording-view{height:100%;overflow:hidden;overscroll-behavior:none;scrollbar-gutter:auto;--header-row-height:48px;--page-gutter:12px}
 .recording-view body{position:fixed;inset:0;width:100%;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;overscroll-behavior:none}
 .recording-view .app-header{position:relative;top:auto;flex:none}
