@@ -1,4 +1,4 @@
-import { createTranslator } from './i18n.js?v=0.7.2';
+import { createTranslator } from './i18n.js?v=0.7.3';
 
 export const PWA_MESSAGES = {
   'Valmistellaan offline-käyttöä…': { en: 'Preparing offline use…', sv: 'Förbereder användning offline…' },

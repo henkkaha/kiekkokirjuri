@@ -1,5 +1,5 @@
 /** Feedback formatting only. No network, storage, browser globals or match data. */
-import { createTranslator, getLanguage } from './i18n.js?v=0.7.2';
+import { createTranslator, getLanguage } from './i18n.js?v=0.7.3';
 
 export const FEEDBACK_MESSAGES = {
   "Bugi": {

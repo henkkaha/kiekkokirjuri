@@ -4,7 +4,15 @@ Offline-ottelukirjuri Kiekko-Espoon väreissä. Julkaistu GitHub Pagesiin:
 
 **https://henkkaha.github.io/kiekkokirjuri/**
 
-Versio **0.7.2**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
+Versio **0.7.3**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
+
+### Päivitys 0.7.3: GrIFK–EKS-kokoonpanot 28.11.2026
+
+Blue-, White- ja Yellow-esivalinnoissa on kussakin kuusi kenttäpelaajaa sekä nimetty maalivahti: Kopiloff, Koponen ja Hannonen. Maalivahtien numeroita ei annettu, joten ne säilyvät puuttuvina. Maalivahti näkyy esivalinnan esikatselussa ja valitun joukkueen Pelaajat-näkymässä erillään torjunnoille valitusta maalivahdista. Torjuntoihin valitaan numero tai jatketaan ilman numeroa kuten aiemminkin.
+
+Sekä julkinen kokoonpanotiedosto että sovellukseen sisältyvä offline-kopio on päivitetty. Valinta tehdään kohdasta **Uusi ottelu → EKS:n kokoonpano**. Valittu kokoonpano tallentuu kyseiseen otteluun; päivitys ei muuta aiemmin luotuja otteluita.
+
+Varmennus: 72 automaattista testiä läpäistiin. Selaimessa tarkistettiin kaikkien kolmen ryhmän esikatselut, Yellow vierasjoukkueena ja White kotijoukkueena sekä maalivahtitiedon säilyminen uudelleenavauksessa. Uusi ottelu luotiin myös testipalvelimen ollessa pysäytettynä. Maalivahtitiedon näkymä tarkistettiin 320 px:n leveydellä.
 
 ### Päivitys 0.7.2: torjunnat kahdella painalluksella
 
@@ -152,7 +160,7 @@ Kiekko-Espoon virallinen tunnus ja väripaletti ovat seuran omalta sivustolta. S
 
 ### EKS-kokoonpanot
 
-`rosters.json` sisältää vain sukunimet ja pelinumerot sekä ottelun ja ryhmän tiedot. Se on julkinen. Päivitä vain tätä tiedostoa seuraavan ottelutapahtuman yhteydessä. Sovellus hakee uudemman tiedoston taustalla verkkoyhteyden aikana ja käyttää offline-tilassa viimeisintä onnistuneesti ladattua kopiota päivämäärineen tai sovellukseen sisältyvää kokoonpanoa. Uuden ottelun lomake ei odota verkkohakua. Valittu kokoonpano kopioidaan otteluun; vanhoja otteluita ei muuteta. Sama numero eri ryhmissä on sallittu, ryhmän sisällä ei. Älä lisää etunimiä tai muita henkilötietoja.
+`rosters.json` sisältää vain sukunimet, annetut pelinumerot ja maalivahdin roolin sekä ottelun ja ryhmän tiedot. Se on julkinen. Ryhmän valinnainen `goalkeeper`-kenttä sisältää `name`-sukunimen ja `number`-numeron; puuttuva numero on `null`. Kenttäpelaajat säilyvät `players`-listassa. Päivitä tiedosto ja sen `updated`-päivämäärä seuraavan ottelutapahtuman yhteydessä. Sovellusjulkaisussa päivitä myös `app.js`:n sisäinen kokoonpano, jotta uusi asennus sisältää saman offline-kopion. Sovellus hakee uudemman tiedoston taustalla verkkoyhteyden aikana ja käyttää offline-tilassa viimeisintä onnistuneesti ladattua kopiota päivämäärineen tai sovellukseen sisältyvää kokoonpanoa. Uuden ottelun lomake ei odota verkkohakua. Valittu kokoonpano kopioidaan otteluun; vanhoja otteluita ei muuteta. Sama numero eri ryhmissä on sallittu, ryhmän sisällä ei. Älä lisää etunimiä tai muita henkilötietoja.
 
 ### Offline ensin (0.6.2)
 Sovelluksen avaus käyttää asennettua versiota heti. Kokoonpano on mukana myös sovelluksen asennetussa varakopiossa; uudempi onnistuneesti haettu JSON säilytetään paikallisesti. Uuden ottelun lomake ei odota verkkoa eikä muuta valintaa taustapäivityksen aikana. Päivitykset vaativat verkon, ottelun kirjaaminen ei. Käyttäjä hyväksyy sovelluspäivityksen erikseen.

@@ -1,13 +1,17 @@
 {
   "schema": 1,
   "event": "GrIFK – EKS",
-  "updated": "2026-11-26",
+  "updated": "2026-11-28",
   "opponent": "GrIFK",
   "side": "away",
   "teams": [
     {
       "id": "blue",
       "name": "Blue",
+      "goalkeeper": {
+        "name": "Kopiloff",
+        "number": null
+      },
       "players": [
         [
           58,
@@ -22,8 +26,8 @@
           "Jantunen"
         ],
         [
-          14,
-          "Niemelä"
+          77,
+          "Koskela"
         ],
         [
           19,
@@ -38,18 +42,18 @@
     {
       "id": "white",
       "name": "White",
+      "goalkeeper": {
+        "name": "Koponen",
+        "number": null
+      },
       "players": [
-        [
-          61,
-          "Koponen"
-        ],
         [
           11,
           "Schlosser"
         ],
         [
-          28,
-          "Kipinä"
+          14,
+          "Niemelä"
         ],
         [
           24,
@@ -72,11 +76,11 @@
     {
       "id": "yellow",
       "name": "Yellow",
+      "goalkeeper": {
+        "name": "Hannonen",
+        "number": null
+      },
       "players": [
-        [
-          17,
-          "Hannonen"
-        ],
         [
           28,
           "Lehto"

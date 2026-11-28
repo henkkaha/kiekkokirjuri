@@ -1,6 +1,10 @@
-import { createTranslator } from './i18n.js?v=0.7.2';
+import { createTranslator } from './i18n.js?v=0.7.3';
 
 export const UI_MESSAGES = {
+  "MV": {"en": "GK", "sv": "MV"},
+  "Kokoonpanon maalivahti": {"en": "Goalkeeper listed in the lineup", "sv": "Målvakt i laguppställningen"},
+  "Numeroa ei ole ilmoitettu.": {"en": "No jersey number supplied.", "sv": "Tröjnummer saknas."},
+  "Virheellinen maalivahtitieto": {"en": "Invalid goalkeeper details", "sv": "Ogiltiga målvaktsuppgifter"},
   "Kotijoukkue": {
     "en": "Home team",
     "sv": "Hemmalag"
