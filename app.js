@@ -1,15 +1,15 @@
 import { VERSION, createGame, normalizeState, elapsed, elapsedPrecise, formatTime, score, teamStats,
   playerStats, periodStats, archiveAndNew, openArchive, validateEvent,
-  normalizeNumber, nextPeriod, snapshot, getActiveGoalie, setActiveGoalie, recordSave } from './model.js?v=0.7.3';
-import { setupPWA, checkForUpdate, refreshPWALanguage } from './pwa.js?v=0.7.3';
-import { textReport, createPoster } from './reports.js?v=0.7.3';
-import { renderHelp } from './help.js?v=0.7.3';
+  normalizeNumber, nextPeriod, snapshot, getActiveGoalie, setActiveGoalie, recordSave, TEAM_COLORS, getTeamColor, setTeamColor } from './model.js?v=0.8.0';
+import { setupPWA, checkForUpdate, refreshPWALanguage } from './pwa.js?v=0.8.0';
+import { textReport, createPoster } from './reports.js?v=0.8.0';
+import { renderHelp } from './help.js?v=0.8.0';
 import { FEEDBACK_STORAGE_KEY, FEEDBACK_KINDS, getFeedbackKinds, FEEDBACK_LIMITS, createFeedbackDraft,
-  normalizeFeedbackDraft, validateFeedbackDraft, buildFeedbackEmail } from './feedback.js?v=0.7.3';
+  normalizeFeedbackDraft, validateFeedbackDraft, buildFeedbackEmail } from './feedback.js?v=0.8.0';
 
-import { LANGUAGE_STORAGE_KEY, LANGUAGES, getLanguage, getLocale, resolveLanguage, setLanguage } from './i18n.js?v=0.7.3';
-import { uiText as tr } from './ui-messages.js?v=0.7.3';
-import { domainText } from './domain-messages.js?v=0.7.3';
+import { LANGUAGE_STORAGE_KEY, LANGUAGES, getLanguage, getLocale, resolveLanguage, setLanguage } from './i18n.js?v=0.8.0';
+import { uiText as tr } from './ui-messages.js?v=0.8.0';
+import { domainText } from './domain-messages.js?v=0.8.0';
 
 let savedLanguage = null;
 try { savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY); } catch { /* Language remains usable in memory. */ }
@@ -205,6 +205,53 @@ function changeLanguage(language) {
   refreshPWALanguage();
   notify(saved ? tr('Kieli vaihdettu.') : tr('Kieli vaihtui, mutta valintaa ei voitu tallentaa. Valitse kieli tarvittaessa uudelleen seuraavalla avauksella.'));
 }
+const colorLabels = {blue:'Sininen',white:'Valkoinen',yellow:'Keltainen',red:'Punainen',green:'Vihreä',black:'Musta',orange:'Oranssi',purple:'Violetti',gray:'Harmaa'};
+function teamStyle(team, game=state) {
+  const color=getTeamColor(game,team);
+  return `--team-color:${color.hex};--team-ink:${color.foreground}`;
+}
+function colorDot(team, game=state) {
+  return `<span class="team-color-dot" style="${teamStyle(team,game)}" aria-hidden="true"></span>`;
+}
+function teamSetupFields(prefix, game) {
+  return ['home','away'].map(team=>{
+    const color=getTeamColor(game,team), number=getActiveGoalie(game,team);
+    const name=game[team]==='Vastustaja'?'':game[team];
+    const id=`${prefix}-${team}`;
+    return `<section class="team-setup-card" style="${teamStyle(team,game)}"><label class="field" for="${id}">${teamLabel(team)}<input id="${id}" name="${team}" value="${escapeHTML(name)}" placeholder="${tr(team==='home'?'Kotijoukkue':'Vastustajan nimi')}" maxlength="60" ${team==='home'?'required':''}></label><div class="team-setup-options"><label class="field" for="${id}-color">${tr("Paitaväri")}<span class="color-select-wrap"><span class="team-color-dot" aria-hidden="true"></span><select id="${id}-color" name="${team}Color" data-team-color="${team}">${TEAM_COLORS.map(item=>`<option value="${item.id}"${item.id===color.id?' selected':''}>${tr(colorLabels[item.id])}</option>`).join('')}</select></span></label><label class="field" for="${id}-goalie">${tr("Maalivahti · numero")}<input id="${id}-goalie" name="${team}Goalie" value="${escapeHTML(number??'')}" inputmode="numeric" pattern="[0-9]{1,2}" maxlength="2" placeholder="0–99" autocomplete="off" list="${id}-numbers"><datalist id="${id}-numbers">${game.roster.filter(player=>player.team===team).map(player=>`<option value="${player.n}">${escapeHTML(player.name)}</option>`).join('')}</datalist></label></div><p id="${id}-goalie-note" class="field-note" data-goalie-note></p></section>`;
+  }).join('')+`<p class="field-note">${tr("Maalivahdin voi valita myöhemmin. Ilman numeroa torjunta kirjataan joukkueelle.")}</p>`;
+}
+function refreshTeamSetup(form) {
+  for(const select of form.querySelectorAll('[data-team-color]')) {
+    const color=TEAM_COLORS.find(item=>item.id===select.value);
+    if(color) {const card=select.closest('.team-setup-card');card.style.setProperty('--team-color',color.hex);card.style.setProperty('--team-ink',color.foreground);}
+  }
+}
+function wireTeamSetup(form) {
+  form.addEventListener('change',event=>{if(event.target.matches('[data-team-color]')){event.target.dataset.userChosen='true';refreshTeamSetup(form);}});
+  refreshTeamSetup(form);
+}
+function applyTeamSetup(game, data) {
+  let next=game;
+  for(const team of ['home','away']) {
+    next=setTeamColor(next,team,String(data.get(team+'Color')));
+    const number=String(data.get(team+'Goalie')??'').trim();
+    // A blank setup field keeps an existing explicit "without a number" choice.
+    next=setActiveGoalie(next,team,number || (getActiveGoalie(game,team)===''?'':null));
+  }
+  return next;
+}
+function directSaveButtons(stats) {
+  return `<div class="quick-save-grid">${['home','away'].map(team=>{
+    const goalie=getActiveGoalie(state,team);
+    return `<section class="quick-save-card" style="${teamStyle(team)}"><button type="button" class="quick-save" data-action="quick-save" data-team="${team}" aria-label="${escapeHTML(tr('Kirjaa torjunta: {team}',{team:displayTeam(state,team)}))}"><span class="quick-save-side">${teamLabel(team)} · ${tr(colorLabels[getTeamColor(state,team).id])}</span><strong class="quick-save-team">${escapeHTML(displayTeam(state,team))}</strong><span class="quick-save-action">${icon('save')}<span>${domainText('Torjunta')}</span><b class="quick-save-total" aria-label="${tr('Torjuntoja: {count}',{count:stats[team].saves})}">${stats[team].saves}</b></span><span class="quick-save-keeper">${escapeHTML(goalie===null||goalie===''?tr("Ilman numeroa"):jerseyName(goalie,team))}</span></button><button type="button" class="quick-save-settings" data-action="change-goalie" data-team="${team}" aria-label="${escapeHTML(tr(goalie===null?'Valitse maalivahti: {team}':'Vaihda maalivahti: {team}',{team:displayTeam(state,team)}))}">${icon('settings')}${goalie===null?tr("Valitse maalivahti"):tr("Vaihda maalivahti")}</button></section>`;
+  }).join('')}</div>`;
+}
+function directSave(team) {
+  if(state.finished) return notify(tr("Jatka ottelua ennen uuden tapahtuman kirjaamista."));
+  if(!['home','away'].includes(team)) return;
+  commitQuickSave({type:'Torjunta',team,time:elapsed(state),period:state.period,_gameId:state.id});
+}
 function teamCrest(team, game=state) {
   const isEspoo = /kiekko[\s-]?espoo|^k[ -]?espoo$/i.test(game[team]);
   return isEspoo ? '<div class="team-crest"><img src="./assets/club-logo.svg" alt="" width="55" height="55"></div>' :
@@ -222,15 +269,16 @@ function renderLive() {
     <div class="live-layout"><div class="live-left">
       <section class="scoreboard" aria-label="${tr("Tulostaulu")}">
         <div class="board-top"><span class="match-state ${running?'running':''}" id="match-state"><span class="status-dot"></span>${status}</span><button class="icon-button board-settings" data-action="match-settings" aria-label="${tr("Ottelun ja kellon asetukset")}">${icon('settings')}</button></div>
-        <div class="scoreline"><div class="team-block">${teamCrest('home')}<div class="team-name">${escapeHTML(displayTeam(state,'home'))}</div><div class="team-role">${tr("Koti")}</div></div>
+        <div class="scoreline"><div class="team-block">${teamCrest('home')}<div class="team-name">${escapeHTML(displayTeam(state,'home'))}</div><div class="team-role">${colorDot('home')}${tr("Koti")}</div></div>
           <div class="score-digits" aria-label="${tr('Tulos {home}–{away}',{home:tally.home,away:tally.away})}"><span class="score-number" data-score="home">${tally.home}</span><span class="score-divider">:</span><span class="score-number" data-score="away">${tally.away}</span></div>
-          <div class="team-block">${teamCrest('away')}<div class="team-name">${escapeHTML(displayTeam(state,'away'))}</div><div class="team-role">${tr("Vieras")}</div></div></div>
+          <div class="team-block">${teamCrest('away')}<div class="team-name">${escapeHTML(displayTeam(state,'away'))}</div><div class="team-role">${colorDot('away')}${tr("Vieras")}</div></div></div>
         <div class="clock-strip"><div class="clock-info"><div class="period-tag"><b>${tr('{period}. erä',{period:state.period})}</b>${formatTime(state.periodLength)}</div><div class="clock-value" id="clock" aria-label="${tr("Aikaa jäljellä")}">${formatTime(state.periodLength-played)}</div></div>
           <button class="clock-button ${running?'is-running':''}" data-action="${state.finished?'reopen-game':ended?'next-period':'toggle-clock'}" id="clock-toggle">${icon(running?'pause':'play')}${clockAction}</button></div>
         <div class="board-stats"><span class="board-stat"><abbr title="${tr("Laukaukset maalia kohti")}">${tr("Laukaukset maalia kohti")}</abbr><strong data-stat="shots">${stats.home.shots} – ${stats.away.shots}</strong></span><span class="board-stat">${tr("Torjunnat")} <strong data-stat="saves">${stats.home.saves} – ${stats.away.saves}</strong></span></div>
       </section>
-      <section class="action-section" aria-labelledby="actions-title"><div class="section-heading"><h2 id="actions-title">${tr("Kirjaa tapahtuma")}</h2><span class="eyebrow">${tr("Yksi tilanne, yksi kirjaus")}</span></div>
-        <div class="action-grid">${[['Maali','goal'],['Torjunta','save'],['Jäähy','penalty']].map(([name,i])=>`<button class="event-action ${i}" data-action="event" data-type="${name}">${icon(i)}<span class="action-label">${domainText(name)}${icon('arrow')}</span></button>`).join('')}</div>
+      <section class="action-section" aria-labelledby="actions-title"><div class="section-heading"><h2 id="actions-title">${tr("Torjunnat")}</h2><span class="eyebrow">${tr("Yksi painallus")}</span></div>
+        ${directSaveButtons(stats)}
+        <div class="action-grid other-actions">${[['Maali','goal'],['Jäähy','penalty']].map(([name,i])=>`<button class="event-action ${i}" data-action="event" data-type="${name}">${icon(i)}<span class="action-label">${domainText(name)}${icon('arrow')}</span></button>`).join('')}</div>
         <p class="action-hint">${icon('info')}${tr("Maali ja torjunta päivittävät laukaukset automaattisesti.")}</p>
       </section>
       <div class="live-note">${icon('people')}<div><b>${tr("Numerolla nopeasti, nimellä myöhemminkin.")}</b>${tr("Lisää kokoonpano Pelaajat-välilehdellä. Voit kirjata tapahtuman myös ilman pelaajatietoja.")}</div></div>
@@ -247,10 +295,10 @@ function eventRow(event, game=state, editable=true) {
   const title = event.type === 'Laukaus' ? tr('Laukausyritys') : domainText(event.type);
   const details = event.type === 'Jäähy' ? [domainText(event.penaltyLabel) || `${event.minutes} min`,domainText(event.reason)].filter(Boolean).join(' · ') :
     event.assists?.length ? tr('Syötöt: {players}',{players:event.assists.map(n=>jerseyName(n,event.team,game)).join(', ')}) : '';
-  return `<li class="event-row"><div class="event-time">${formatTime(event.time)}<small>${tr('{period}. ERÄ',{period:event.period})}</small></div><div class="event-symbol ${eventClass(event.type)}">${icon(eventIcon(event.type))}</div><div class="event-body"><div class="event-title">${escapeHTML(title)}${player?` <span>${escapeHTML(player)}</span>`:''}</div><div class="event-subtitle">${escapeHTML(displayTeam(game,event.team))}</div>${details?`<div class="event-meta">${escapeHTML(details)}</div>`:''}${event.detail?`<div class="event-meta">${escapeHTML(event.detail)}</div>`:''}${event.type==='Laukaus'?`<div class="event-meta">${tr("Vanha kirjaus · ei sisälly laukauksiin maalia kohti")}</div>`:''}</div>${editable?`<button class="event-edit" data-action="edit-event" data-id="${escapeHTML(event.id)}" aria-label="${escapeHTML(tr('Muokkaa: {event}',{event:title}))}, ${formatTime(event.time)}, ${escapeHTML(displayTeam(game,event.team))}">${icon('edit')}</button>`:''}</li>`;
+  return `<li class="event-row"><div class="event-time">${formatTime(event.time)}<small>${tr('{period}. ERÄ',{period:event.period})}</small></div><div class="event-symbol ${eventClass(event.type)}">${icon(eventIcon(event.type))}</div><div class="event-body"><div class="event-title">${escapeHTML(title)}${player?` <span>${escapeHTML(player)}</span>`:''}</div><div class="event-subtitle">${colorDot(event.team,game)}${escapeHTML(displayTeam(game,event.team))}</div>${details?`<div class="event-meta">${escapeHTML(details)}</div>`:''}${event.detail?`<div class="event-meta">${escapeHTML(event.detail)}</div>`:''}${event.type==='Laukaus'?`<div class="event-meta">${tr("Vanha kirjaus · ei sisälly laukauksiin maalia kohti")}</div>`:''}</div>${editable?`<button class="event-edit" data-action="edit-event" data-id="${escapeHTML(event.id)}" aria-label="${escapeHTML(tr('Muokkaa: {event}',{event:title}))}, ${formatTime(event.time)}, ${escapeHTML(displayTeam(game,event.team))}">${icon('edit')}</button>`:''}</li>`;
 }
 function teamTabs(selected, action) {
-  return `<div class="tabs" role="group" aria-label="${tr("Joukkue")}">${['home','away'].map(t=>`<button class="tab-button ${selected===t?'active':''}" data-action="${action}" data-team="${t}" aria-pressed="${selected===t}">${escapeHTML(displayTeam(state,t))}</button>`).join('')}</div>`;
+  return `<div class="tabs" role="group" aria-label="${tr("Joukkue")}">${['home','away'].map(t=>`<button class="tab-button ${selected===t?'active':''}" data-action="${action}" data-team="${t}" aria-pressed="${selected===t}">${colorDot(t)}${escapeHTML(displayTeam(state,t))}</button>`).join('')}</div>`;
 }
 function presetGoalkeeper(team, game=state) {
   const keeper=game.rosterPreset?.goalkeeper;
@@ -357,14 +405,14 @@ function drawEvent(preservePosition=false) {
   if (!p.team) {
     if(p.type==='Torjunta'&&!p._editing) { drawSaveChoices(subtitle); return; }
     const question = p.type==='Torjunta'?tr("Kumpi joukkue torjui?"):p.type==='Maali'?tr("Kumpi joukkue teki maalin?"):tr("Kummalle joukkueelle jäähy?");
-    openSheet(domainText(p.type),subtitle,`<div class="sheet-step"><span>${tr("01 Joukkue")}</span>${icon('arrow')}<span>${tr("02 Pelaaja ja tiedot")}</span></div><h3 style="margin-bottom:16px">${question}</h3><div class="choice-grid">${['home','away'].map(t=>`<button type="button" class="choice" data-action="event-team" data-team="${t}">${escapeHTML(displayTeam(state,t))}<small>${teamLabel(t)}</small></button>`).join('')}</div>${p.type==='Torjunta'?`<p class="assist-help">${tr("Valitse torjuneen maalivahdin joukkue. Vastustajalle lisätään samalla laukaus maalia kohti.")}</p>`:''}`);
+    openSheet(domainText(p.type),subtitle,`<div class="sheet-step"><span>${tr("01 Joukkue")}</span>${icon('arrow')}<span>${tr("02 Pelaaja ja tiedot")}</span></div><h3 style="margin-bottom:16px">${question}</h3><div class="choice-grid">${['home','away'].map(t=>`<button type="button" class="choice team-choice" style="${teamStyle(t)}" data-action="event-team" data-team="${t}">${escapeHTML(displayTeam(state,t))}<small>${teamLabel(t)}</small></button>`).join('')}</div>${p.type==='Torjunta'?`<p class="assist-help">${tr("Valitse torjuneen maalivahdin joukkue. Vastustajalle lisätään samalla laukaus maalia kohti.")}</p>`:''}`);
     return;
   }
   const roster = state.roster.filter(player=>player.team===p.team).sort((a,b)=>Number(a.n)-Number(b.n));
   const unknownSelected = p.n!=='' && !roster.some(player=>player.n===p.n);
   const numbers = [...roster,...(unknownSelected?[{n:p.n,name:''}]:[])];
   const role = p.type==='Maali'?tr("Maalintekijä"):p.type==='Torjunta'?tr("Maalivahti"):tr("Pelaaja");
-  let body = `<div class="sheet-team-line"><div><strong>${escapeHTML(displayTeam(state,p.team))}</strong><br><span>${teamLabel(p.team)}</span></div><button class="text-button" type="button" data-action="change-event-team">${tr("Vaihda joukkuetta")}</button></div><div class="sheet-section"><div class="field-heading">${role}<span>${tr("Valinnainen")}</span></div>
+  let body = `<div class="sheet-team-line"><div><strong>${colorDot(p.team)}${escapeHTML(displayTeam(state,p.team))}</strong><br><span>${teamLabel(p.team)}</span></div><button class="text-button" type="button" data-action="change-event-team">${tr("Vaihda joukkuetta")}</button></div><div class="sheet-section"><div class="field-heading">${role}<span>${tr("Valinnainen")}</span></div>
     ${numbers.length?`<div class="number-grid">${numbers.map(player=>`<button type="button" class="number-chip ${p.n===player.n?'selected':''}" data-action="pick-player" data-number="${player.n}" aria-pressed="${p.n===player.n}" aria-label="${escapeHTML(jerseyName(player.n,p.team)||'#'+player.n)}"><b>${player.n}</b><small>${escapeHTML(player.name||tr("Numero"))}</small></button>`).join('')}</div>`:''}
     <div class="manual-entry"><label class="field" for="manual-number"><span class="sr-only">${tr('{role}, numero',{role})}</span><input id="manual-number" inputmode="numeric" pattern="[0-9]{1,2}" maxlength="2" placeholder="${numbers.length?tr("Muu numero"):tr("Pelaajan numero, 0–99")}" value="${escapeHTML(p._manualNumber||'')}" autocomplete="off"></label><button type="button" class="button" data-action="manual-player">${tr("Valitse")}</button></div>
     ${p.n!==''?`<p class="selected-summary">${icon('check')}${escapeHTML(jerseyName(p.n,p.team)||'#'+p.n)}<button type="button" data-action="clear-player" aria-label="${tr("Poista pelaajavalinta")}">${icon('close')}</button></p>`:`<p class="assist-help">${tr("Numeron voi täydentää myöhemmin tapahtumaa muokkaamalla.")}</p>`}</div>`;
@@ -385,17 +433,13 @@ function goalieLabel(team, game=state) {
   return number===null?tr("Maalivahti valitsematta"):number===''?tr("Ilman numeroa"):jerseyName(number,team,game);
 }
 function drawSaveChoices(subtitle) {
-  openSheet(domainText("Torjunta"),subtitle,`<h3 class="save-question">${tr("Kumpi joukkue torjui?")}</h3><div class="save-team-grid">${['home','away'].map(team=>{
-    const chosen = getActiveGoalie(state,team)!==null;
-    return `<section class="save-team-card"><button type="button" class="save-team" data-action="event-team" data-team="${team}" aria-label="${escapeHTML(tr(chosen?'Kirjaa torjunta: {team}':'Valitse maalivahti: {team}',{team:displayTeam(state,team)}))}"><span class="save-team-side">${teamLabel(team)}</span><strong>${escapeHTML(displayTeam(state,team))}</strong><span class="save-goalie">${icon('save')}${escapeHTML(goalieLabel(team))}</span><span class="save-callout">${chosen?tr("Kirjaa torjunta"):tr("Valitse maalivahti")}${icon('arrow')}</span></button>${chosen?`<button class="save-goalie-change" type="button" data-action="change-goalie" data-team="${team}" aria-label="${escapeHTML(tr('Vaihda maalivahti: {team}',{team:displayTeam(state,team)}))}">${icon('edit')}${tr("Vaihda maalivahti")}</button>`:''}</section>`;
-  }).join('')}</div><p class="assist-help">${tr("Torjunta tallentuu heti joukkueen painalluksesta, kun maalivahti on valittu.")}</p><p class="assist-help">${tr("Valitse torjuneen maalivahdin joukkue. Vastustajalle lisätään samalla laukaus maalia kohti.")}</p>`);
+  openSheet(domainText("Torjunta"),subtitle,`<h3 class="save-question">${tr("Kumpi joukkue torjui?")}</h3><div class="choice-grid">${['home','away'].map(team=>`<button type="button" class="choice team-choice" style="${teamStyle(team)}" data-action="event-team" data-team="${team}">${escapeHTML(displayTeam(state,team))}<small>${teamLabel(team)}</small></button>`).join('')}</div><p class="assist-help">${tr("Valitse torjuneen maalivahdin joukkue. Vastustajalle lisätään samalla laukaus maalia kohti.")}</p>`);
 }
 function selectEventTeam(team) {
   if(!pending||!['home','away'].includes(team)) return;
   pending.team=team;
   if(pending.type==='Torjunta'&&!pending._editing) {
-    if(getActiveGoalie(state,team)===null) showGoaliePicker(team,true);
-    else commitQuickSave(pending);
+    commitQuickSave(pending);
   } else drawEvent();
 }
 function showGoaliePicker(team, recordPending=false) {
@@ -444,7 +488,7 @@ function commitQuickSave(eventInput, game=state) {
   if(!persist(next)) {if(!externalConflict)formError(tr("Kirjausta ei voitu tallentaa. Tarkista ilmoitus sivun yläreunassa."));return;}
   closeSheet();
   render();
-  notify(tr('Torjunta kirjattu · {team} · {goalie}',{team:displayTeam(state,event.team),goalie:goalieLabel(event.team)}),()=>{
+  notify(tr('Torjunta kirjattu · {team} · {goalie}',{team:displayTeam(state,event.team),goalie:event.n===''?tr('Ilman numeroa'):jerseyName(event.n,event.team)}),()=>{
     if(state.id!==gameId) return notify(tr("Ottelu vaihtui. Muokkaa kirjausta otteluarkiston kautta."));
     mutate(game=>{game.events=game.events.filter(item=>item.id!==event.id);});
   });
@@ -537,12 +581,41 @@ function wireRosterForm(){
   const form=$('new-game-form');if(!form)return;
   let data=rosterPresets;const select=$('roster-preset'),side=$('roster-side'),preview=$('roster-preview'),status=$('roster-status');
   form.rosterSnapshot=data;
+  let previousPreset=null,previousSide=side.value;
   function statusText(){status.textContent=data?data.event+' · '+new Intl.DateTimeFormat(getLocale()).format(new Date(data.updated+'T12:00:00'))+' · '+tr(rosterSource):tr(rosterSource)||tr('Tarkistetaan kokoonpanoja…')}
   function updatePreview(fillNames){
     const t=data?.teams.find(t=>t.id===select.value);preview.textContent='';
     side.disabled=!t;
-    if(!t)return;
-    if(fillNames){const own=side.value,other=own==='home'?'away':'home';$('new-'+own).value='EKS '+t.name;$('new-'+other).value=data.opponent;}
+    for(const team of ['home','away']) $('new-'+team+'-goalie-note').textContent='';
+    if(!t) {
+      if(previousPreset) $('new-'+previousSide+'-goalie').value='';
+      previousPreset=null;
+      return;
+    }
+    if(fillNames){
+      const own=side.value,other=own==='home'?'away':'home';
+      // Keeper numbers and chosen colors belong to the team, not its home/away slot.
+      if(previousPreset && previousSide!==own) {
+        for(const field of ['color','goalie']) {
+          const a=$('new-home-'+field),b=$('new-away-'+field);
+          [a.value,b.value]=[b.value,a.value];
+          if(field==='color') [a.dataset.userChosen,b.dataset.userChosen]=[b.dataset.userChosen||'',a.dataset.userChosen||''];
+        }
+      }
+      const changedGroup=previousPreset?.id!==t.id;
+      $('new-'+own).value='EKS '+t.name;$('new-'+other).value=data.opponent;
+      if(changedGroup) {
+        $('new-'+own+'-goalie').value=t.goalkeeper?.number??'';
+        if(['blue','white','yellow'].includes(t.id)) {
+          const ownColor=$('new-'+own+'-color'),otherColor=$('new-'+other+'-color');
+          ownColor.value=t.id;ownColor.dataset.userChosen='';
+          if(otherColor.value===t.id && otherColor.dataset.userChosen!=='true') otherColor.value=t.id==='white'?'blue':'white';
+        }
+      }
+      if(t.goalkeeper) $('new-'+own+'-goalie-note').textContent=tr('Kokoonpanon maalivahti')+': '+t.goalkeeper.name;
+      previousPreset=t;previousSide=own;
+      refreshTeamSetup(form);
+    }
     if(t.goalkeeper){const span=document.createElement('span');span.className='roster-preview-chip roster-preview-goalie';span.textContent=tr('MV')+' '+t.goalkeeper.name+(t.goalkeeper.number===null?'':' · #'+t.goalkeeper.number);preview.appendChild(span)}
     for(const [n,name] of t.players){const span=document.createElement('span');span.className='roster-preview-chip';span.textContent='#'+n+' '+name;preview.appendChild(span)}
   }
@@ -555,8 +628,9 @@ window.addEventListener('online',()=>void refreshRosterPresets());
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&state.start===null)void refreshRosterPresets();});
 function showNewGame() {
   pending = null;
-  openSheet(tr("Uusi ottelu"),tr("Uusi peli, puhdas tulostaulu."),`<div class="stack"><div class="helper-box"><label class="field" for="roster-preset">${tr("EKS:n kokoonpano")}<select id="roster-preset" name="preset"></select></label><p class="field-note" id="roster-status"></p><label class="field" for="roster-side" style="margin-top:12px">${tr("EKS pelaa")}<select id="roster-side" name="presetSide" disabled><option value="home">${tr("Kotijoukkueena")}</option><option value="away">${tr("Vierasjoukkueena")}</option></select></label><div id="roster-preview" class="roster-preview"></div></div><label class="field" for="new-home">${tr("Kotijoukkue")}<input id="new-home" name="home" value="${escapeHTML(state.home)}" maxlength="60" required></label><label class="field" for="new-away">${tr("Vierasjoukkue")}<input id="new-away" name="away" placeholder="${tr("Vastustajan nimi")}" maxlength="60"></label><div class="form-grid"><label class="field" for="new-length">${tr("Erän pituus, min")}<input id="new-length" name="length" type="number" inputmode="numeric" min="1" max="60" value="${state.periodLength/60}" required></label><label class="field" for="new-date">${tr("Ottelupäivä")}<input id="new-date" name="date" type="date" value="${localDate()}" required></label></div><div class="helper-box"><strong>${tr("Nykyinen ottelu siirtyy arkistoon.")}</strong><br>${tr("Uuden ottelun tulos ja tapahtumat nollautuvat. Valittu EKS-kokoonpano kopioidaan uuteen otteluun; vastustajan pelaajat lisätään tarvittaessa käsin.")}</div></div>`,
+  openSheet(tr("Uusi ottelu"),tr("Uusi peli, puhdas tulostaulu."),`<div class="stack"><div class="helper-box"><label class="field" for="roster-preset">${tr("EKS:n kokoonpano")}<select id="roster-preset" name="preset"></select></label><p class="field-note" id="roster-status"></p><label class="field" for="roster-side" style="margin-top:12px">${tr("EKS pelaa")}<select id="roster-side" name="presetSide" disabled><option value="home">${tr("Kotijoukkueena")}</option><option value="away">${tr("Vierasjoukkueena")}</option></select></label><div id="roster-preview" class="roster-preview"></div></div>${teamSetupFields('new',createGame({home:state.home}))}<div class="form-grid"><label class="field" for="new-length">${tr("Erän pituus, min")}<input id="new-length" name="length" type="number" inputmode="numeric" min="1" max="60" value="${state.periodLength/60}" required></label><label class="field" for="new-date">${tr("Ottelupäivä")}<input id="new-date" name="date" type="date" value="${localDate()}" required></label></div><div class="helper-box"><strong>${tr("Nykyinen ottelu siirtyy arkistoon.")}</strong><br>${tr("Uuden ottelun tulos ja tapahtumat nollautuvat. Valittu EKS-kokoonpano kopioidaan uuteen otteluun; vastustajan pelaajat lisätään tarvittaessa käsin.")}</div></div>`,
     `<button class="button quiet" type="button" data-action="close-sheet">${tr("Peruuta")}</button><button class="button primary" type="submit">${tr("Luo ottelu")}</button>`,'new-game-form');
+  wireTeamSetup($('new-game-form'));
   wireRosterForm();
 }
 function localDate() {
@@ -567,8 +641,8 @@ function submitNewGame(form) {
   const data = new FormData(form);
   const minutes = Number(data.get('length'));
   if(!Number.isInteger(minutes)||minutes<1||minutes>60) throw new Error(tr("Valitse erän pituus väliltä 1–60 minuuttia."));
-  const hasContent = state.events.length || state.roster.length || elapsedPrecise(state) || state.start!==null || state.period>1 || state.away!=='Vastustaja' || state.notes || state.detail || state.title;
-  const next = hasContent ? archiveAndNew({...state,finished:true}) : {...createGame(),archive:clone(state.archive)};
+  const hasContent = state.configured || ['home','away'].some(team=>getActiveGoalie(state,team)!==null || getTeamColor(state,team).id!==(team==='home'?'blue':'white')) || state.events.length || state.roster.length || elapsedPrecise(state) || state.start!==null || state.period>1 || state.away!=='Vastustaja' || state.notes || state.detail || state.title;
+  let next = hasContent ? archiveAndNew({...state,finished:true}) : {...createGame(),archive:clone(state.archive)};
   next.home = String(data.get('home')).trim() || 'Kiekko-Espoo';
   next.away = String(data.get('away')).trim() || 'Vastustaja';
   next.periodLength = minutes*60;
@@ -576,6 +650,14 @@ function submitNewGame(form) {
   next.configured = true;
   const presetId=String(data.get('preset')||'');
   if(presetId){const preset=form.rosterSnapshot?.teams.find(t=>t.id===presetId);const side=String(data.get('presetSide'));if(!preset||!['home','away'].includes(side))throw new Error(tr("Valitse kokoonpano uudelleen."));next.roster=preset.players.map(([n,name])=>({n:String(n),name,team:side}));if(preset.goalkeeper?.number!==null && preset.goalkeeper?.number!==undefined) next.roster.push({n:String(preset.goalkeeper.number),name:preset.goalkeeper.name,team:side});next.rosterPreset={event:form.rosterSnapshot.event,updated:form.rosterSnapshot.updated,id:preset.id,side,...(preset.goalkeeper?{goalkeeper:clone(preset.goalkeeper)}:{})};}
+  next=applyTeamSetup(next,data);
+  // Only a fresh preset may supply a name for a newly entered keeper jersey.
+  const keeper=presetGoalkeeper(next.rosterPreset?.side,next);
+  if(keeper) {
+    const number=getActiveGoalie(next,next.rosterPreset.side);
+    const player=next.roster.find(p=>p.team===next.rosterPreset.side && p.n===number);
+    if(player && !player.name) player.name=keeper.name;
+  }
   if(!persist(next)) return formError(tr("Uutta ottelua ei voitu tallentaa."));
   closeSheet();
   viewAllEvents=false;
@@ -586,12 +668,13 @@ function submitNewGame(form) {
 }
 function showMatchSettings(startAfter=false) {
   const canChangeLength = !state.events.length && !elapsed(state) && state.start===null && state.period===1;
-  openSheet(startAfter?tr("Valmiina aloitukseen?"):tr("Ottelun asetukset"),startAfter?tr("Valitse erän pituus ennen kellon käynnistämistä."):tr("Joukkueet ja peliaika."),`<div class="stack"><label class="field" for="settings-home">${tr("Kotijoukkue")}<input id="settings-home" name="home" value="${escapeHTML(state.home)}" maxlength="60" required></label><label class="field" for="settings-away">${tr("Vierasjoukkue")}<input id="settings-away" name="away" value="${escapeHTML(state.away==='Vastustaja'?'':state.away)}" placeholder="${tr('Vastustaja')}" maxlength="60"></label><label class="field" for="settings-length">${tr("Erän pituus, min")}<input id="settings-length" name="length" type="number" inputmode="numeric" min="1" max="60" value="${state.periodLength/60}" ${canChangeLength?'required':'disabled'}>${canChangeLength?'':`<small>${tr("Erän pituus on lukittu tämän ottelun alkamisen jälkeen.")}</small>`}</label><input name="startAfter" type="hidden" value="${startAfter?'yes':'no'}">${startAfter?'':`<div class="form-grid"><button class="button" type="button" data-action="edit-clock">${icon('clock')}${tr("Korjaa kelloa")}</button><button class="button" type="button" data-action="next-period">${tr("Seuraava erä")}${icon('arrow')}</button></div><button class="text-button" type="button" data-action="${state.finished?'reopen-game':'finish-game'}">${state.finished?tr("Jatka ottelua"):tr("Merkitse ottelu päättyneeksi")}</button>`}</div>`,
+  openSheet(startAfter?tr("Valmiina aloitukseen?"):tr("Ottelun asetukset"),startAfter?tr("Valitse erän pituus ennen kellon käynnistämistä."):tr("Joukkueet ja peliaika."),`<div class="stack">${teamSetupFields('settings',state)}<label class="field" for="settings-length">${tr("Erän pituus, min")}<input id="settings-length" name="length" type="number" inputmode="numeric" min="1" max="60" value="${state.periodLength/60}" ${canChangeLength?'required':'disabled'}>${canChangeLength?'':`<small>${tr("Erän pituus on lukittu tämän ottelun alkamisen jälkeen.")}</small>`}</label><input name="startAfter" type="hidden" value="${startAfter?'yes':'no'}">${startAfter?'':`<div class="form-grid"><button class="button" type="button" data-action="edit-clock">${icon('clock')}${tr("Korjaa kelloa")}</button><button class="button" type="button" data-action="next-period">${tr("Seuraava erä")}${icon('arrow')}</button></div><button class="text-button" type="button" data-action="${state.finished?'reopen-game':'finish-game'}">${state.finished?tr("Jatka ottelua"):tr("Merkitse ottelu päättyneeksi")}</button>`}</div>`,
     `<button type="button" class="button quiet" data-action="close-sheet">${tr("Peruuta")}</button><button type="submit" class="button primary">${startAfter?icon('play')+tr("Aloita 1. erä"):tr("Tallenna asetukset")}</button>`,'settings-form');
+  wireTeamSetup($('settings-form'));
 }
 function submitSettings(form) {
   const data = new FormData(form);
-  const next = clone(state);
+  const next = applyTeamSetup(clone(state),data);
   next.home = String(data.get('home')).trim() || 'Kiekko-Espoo';
   next.away = String(data.get('away')).trim() || 'Vastustaja';
   if(data.has('length')) {
@@ -954,6 +1037,7 @@ document.addEventListener('click',async event=>{
       case 'confirm':if(confirmAction)confirmAction();break;
       case 'undo':{const undo=undoAction;$('toast').hidden=true;undoAction=null;if(undo)undo();break;}
       case 'event':if(state.finished){notify(tr("Jatka ottelua ennen uuden tapahtuman kirjaamista."));break;}beginEvent(type);break;
+      case 'quick-save':directSave(team);break;
       case 'event-team':selectEventTeam(team);break;
       case 'change-goalie':showGoaliePicker(team);break;
       case 'pick-goalie':commitGoalieChoice(number);break;

@@ -5,7 +5,7 @@ import {
   teamStats, playerStats, snapshot, archiveAndNew, openArchive, nextPeriod,
 } from '../model.js';
 
-test('legacy matches ask for each goalkeeper once without guessing from historical saves', () => {
+test('legacy matches leave each goalkeeper unselected without guessing from historical saves', () => {
   const legacy = createGame();
   delete legacy.activeGoalies;
   legacy.events.push({ id: 'older-save', type: 'Torjunta', team: 'home', n: '31', period: 1, time: 15, assists: [] });
@@ -71,9 +71,33 @@ test('changing goalkeeper affects only future saves and keeps the opposing team 
   assert.equal(playerStats(game, 'away').find(player => player.n === '98').saves, 1);
 });
 
+test('direct saves record immediately without a selected goalkeeper and preserve the original time', () => {
+  const original = { ...createGame({ periodLength: 900 }), period: 3, seconds: 50, start: 123456 };
+  const before = structuredClone(original);
+  let game = recordSave(original, { team: 'away', time: 17, period: 2 });
+  game = recordSave(game, { team: 'home', time: 18, period: 2 });
+  assert.deepEqual(game.events.map(event => [event.team, event.n, event.time, event.period]), [
+    ['away', '', 17, 2], ['home', '', 18, 2],
+  ]);
+  assert.notEqual(game.events[0].id, game.events[1].id);
+  assert.deepEqual(game.activeGoalies, { home: null, away: null });
+  assert.deepEqual(game.roster, []);
+  assert.deepEqual([game.period, game.seconds, game.start], [3, 50, 123456]);
+  assert.deepEqual(teamStats(game), {
+    home: { goals: 0, shots: 1, saves: 1, penaltyMinutes: 0 },
+    away: { goals: 0, shots: 1, saves: 1, penaltyMinutes: 0 },
+  });
+  assert.deepEqual(playerStats(game, 'home'), []);
+  assert.deepEqual(playerStats(game, 'away'), []);
+  const earlierEvents = structuredClone(game.events);
+  game = recordSave(setActiveGoalie(game, 'away', '0'), { team: 'away', time: 20, period: 2 });
+  assert.deepEqual(game.events.slice(0, 2), earlierEvents, 'later setup must not guess the goalkeeper of earlier saves');
+  assert.equal(game.events[2].n, '0');
+  assert.deepEqual(original, before);
+});
+
 test('unknown goalkeeper is an explicit persistent choice and never becomes jersey zero', () => {
   const unselected = createGame();
-  assert.throws(() => recordSave(unselected, { team: 'away', time: 0 }), /Valitse maalivahti/);
   let unknown = setActiveGoalie(unselected, 'away', '');
   unknown = normalizeState(JSON.parse(JSON.stringify(unknown)));
   assert.equal(getActiveGoalie(unknown, 'away'), '');

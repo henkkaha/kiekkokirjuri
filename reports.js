@@ -1,8 +1,8 @@
-import { elapsed, formatTime, score, teamStats, playerStats, periodStats } from './model.js?v=0.7.3';
+import { elapsed, formatTime, score, teamStats, playerStats, periodStats } from './model.js?v=0.8.0';
 
-import { createTranslator, getLanguage, getLocale } from './i18n.js?v=0.7.3';
-import { domainText } from './domain-messages.js?v=0.7.3';
-import { REPORT_MESSAGES } from './report-messages.js?v=0.7.3';
+import { createTranslator, getLanguage, getLocale } from './i18n.js?v=0.8.0';
+import { domainText } from './domain-messages.js?v=0.8.0';
+import { REPORT_MESSAGES } from './report-messages.js?v=0.8.0';
 export { REPORT_MESSAGES };
 
 const translate = createTranslator(REPORT_MESSAGES);

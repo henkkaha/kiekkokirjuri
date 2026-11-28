@@ -1,5 +1,5 @@
 /* Kiekkokirjuri: an immutable, complete offline shell for each release. */
-const RELEASE = '0.7.3';
+const RELEASE = '0.8.0';
 const SCOPE = new URL(self.registration.scope);
 const CACHE_PREFIX = `kiekkokirjuri:${SCOPE.pathname}:`;
 const CACHE_NAME = `${CACHE_PREFIX}${RELEASE}`;

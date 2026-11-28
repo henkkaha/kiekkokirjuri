@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getLanguage, setLanguage } from '../i18n.js?v=0.7.3';
+import { getLanguage, setLanguage } from '../i18n.js?v=0.8.0';
 import { renderHelp, HELP_MESSAGES } from '../help.js';
-import { HELP_COPY } from '../help-messages.js?v=0.7.3';
+import { HELP_COPY } from '../help-messages.js?v=0.8.0';
 import {
   FEEDBACK_MESSAGES, FEEDBACK_KINDS, getFeedbackKinds, createFeedbackDraft,
   normalizeFeedbackDraft, validateFeedbackDraft, buildFeedbackText, buildFeedbackEmail,
@@ -11,9 +11,9 @@ import {
 const escapeHTML = value => String(value).replace(/[&<>"']/g, character => ({
   '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
 }[character]));
-const help = language => renderHelp({ icon:() => '<svg aria-hidden="true"></svg>', escapeHTML, version:'0.7.3', language });
+const help = language => renderHelp({ icon:() => '<svg aria-hidden="true"></svg>', escapeHTML, version:'0.8.0', language });
 const input = { ...createFeedbackDraft('bug'), title:'Åberg & Co {version}', description:'User-written text: Maali, Jäähy, äö, <test> 😀', steps:'1. Start.\n2. Stop.' };
-const context = { recipient:'developer@example.com', version:'0.7.3', platform:'iPhone', browser:'Safari', standalone:true, online:false, offlineReady:true };
+const context = { recipient:'developer@example.com', version:'0.8.0', platform:'iPhone', browser:'Safari', standalone:true, online:false, offlineReady:true };
 
 test('every help and feedback translation preserves interpolation placeholders and static markup', () => {
   const placeholders = text => [...text.matchAll(/\{([A-Za-z][A-Za-z0-9_]*)\}/g)].map(match => match[1]).sort();
@@ -86,7 +86,7 @@ test('localized feedback errors retain input validation and opt-out behavior', (
     assert.throws(() => createFeedbackDraft('__proto__',language));
     const email = buildFeedbackEmail({...input,type:'idea',includeDiagnostics:false}, {...context,language});
     assert.ok(email.body.includes(input.description));
-    assert.doesNotMatch(email.body, /Technical details|Teknisk information|iPhone|Safari|0\.7\.3|1\. Start/);
+    assert.doesNotMatch(email.body, /Technical details|Teknisk information|iPhone|Safari|0\.8\.0|1\. Start/);
   }
 });
 

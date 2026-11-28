@@ -1,13 +1,50 @@
-import { modelText } from './model-messages.js?v=0.7.3';
+import { modelText } from './model-messages.js?v=0.8.0';
 
 /** The storage shape deliberately stays compatible with ke-match-v1 backups. */
-export const VERSION = '0.7.3';
+export const VERSION = '0.8.0';
 
 const DEFAULT_LENGTH = 20 * 60;
 const NEW_EVENT_TYPES = new Set(['Maali', 'Torjunta', 'Jäähy']);
 const TEAMS = new Set(['home', 'away']);
 const own = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
 const record = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+/** Stored colors are IDs from this palette; imported text never becomes arbitrary CSS. */
+export const TEAM_COLORS = Object.freeze([
+  { id: 'blue', hex: '#003DA5', foreground: '#FFFFFF' },
+  { id: 'white', hex: '#FFFFFF', foreground: '#10142B' },
+  { id: 'yellow', hex: '#FFE000', foreground: '#10142B' },
+  { id: 'red', hex: '#C92B3C', foreground: '#FFFFFF' },
+  { id: 'green', hex: '#087A54', foreground: '#FFFFFF' },
+  { id: 'black', hex: '#172036', foreground: '#FFFFFF' },
+  { id: 'orange', hex: '#F28B24', foreground: '#10142B' },
+  { id: 'purple', hex: '#7044B6', foreground: '#FFFFFF' },
+  { id: 'gray', hex: '#526074', foreground: '#FFFFFF' },
+].map(color => Object.freeze(color)));
+const DEFAULT_TEAM_COLORS = Object.freeze({ home: 'blue', away: 'white' });
+
+/** Cosmetic metadata must not make an otherwise valid match backup unreadable. */
+function normalizeTeamColors(value) {
+  return Object.fromEntries([...TEAMS].map(side => {
+    const id = record(value) && own(value, side) ? value[side] : undefined;
+    return [side, TEAM_COLORS.some(color => color.id === id) ? id : DEFAULT_TEAM_COLORS[side]];
+  }));
+}
+
+export function getTeamColor(game, side) {
+  const selectedTeam = team(side);
+  const id = normalizeTeamColors(game?.teamColors)[selectedTeam];
+  return TEAM_COLORS.find(color => color.id === id);
+}
+
+/** Colors belong to a match and do not alter either team's identity or events. */
+export function setTeamColor(game, side, id) {
+  const selectedTeam = team(side);
+  if (!TEAM_COLORS.some(color => color.id === id)) throw new Error(modelText('Valitse joukkueen väri.'));
+  const next = copy(game);
+  next.teamColors = { ...normalizeTeamColors(game.teamColors), [selectedTeam]: id };
+  return next;
+}
 
 function copy(value) {
   try {
@@ -90,7 +127,7 @@ export function normalizeNumber(input) {
   return String(Number(value));
 }
 
-/** null asks once, an empty string deliberately records saves without a number. */
+/** null is unselected; an empty string explicitly selects a keeper without a number. */
 function normalizeActiveGoalies(value) {
   if (value === undefined) return { home: null, away: null };
   if (!record(value) || Object.keys(value).some(key => !TEAMS.has(key))) {
@@ -125,9 +162,10 @@ export function setActiveGoalie(game, side, number) {
 export function recordSave(game, { team: side, time, period } = {}) {
   const selectedTeam = team(side);
   const number = getActiveGoalie(game, selectedTeam);
-  if (number === null) throw new Error(modelText('Valitse maalivahti ennen torjunnan kirjaamista.'));
-  const next = setActiveGoalie(game, selectedTeam, number);
-  const event = validateEvent({ type: 'Torjunta', team: selectedTeam, n: number, assists: [], time, period }, game);
+  // A live save never waits for setup. Keep an unselected goalkeeper unselected.
+  const next = number === null ? copy(game) : setActiveGoalie(game, selectedTeam, number);
+  next.activeGoalies = normalizeActiveGoalies(next.activeGoalies);
+  const event = validateEvent({ type: 'Torjunta', team: selectedTeam, n: number ?? '', assists: [], time, period }, game);
   claimId(event, new Set([game.id, ...game.events.map(item => item.id)]), 'event');
   next.events.push(event);
   return next;
@@ -143,12 +181,13 @@ function penaltyMinutes(value, fallback = 2) {
   return result;
 }
 
-export function createGame({ home = 'Kiekko-Espoo', away = 'Vastustaja', periodLength: length = DEFAULT_LENGTH } = {}) {
+export function createGame({ home = 'Kiekko-Espoo', away = 'Vastustaja', periodLength: length = DEFAULT_LENGTH, teamColors } = {}) {
   return {
     id: newId(), date: new Date().toISOString(), version: VERSION,
     home: text(home) || 'Kiekko-Espoo', away: text(away) || 'Vastustaja',
     period: 1, periodLength: periodLength(length), seconds: 0, start: null,
-    roster: [], events: [], archive: [], activeGoalies: { home: null, away: null }
+    roster: [], events: [], archive: [], activeGoalies: { home: null, away: null },
+    teamColors: normalizeTeamColors(teamColors)
   };
 }
 
@@ -180,6 +219,7 @@ export function normalizeState(raw) {
       ? null : numeric(game.start, null, 'Kellon aloitusaika');
     if (game.start !== null && game.start < 0) throw new Error(modelText('Kellon aloitusaika ei ole kelvollinen.'));
     game.activeGoalies = normalizeActiveGoalies(source.activeGoalies);
+    game.teamColors = normalizeTeamColors(source.teamColors);
 
     game.roster = source.roster.map(player => {
       if (!record(player)) throw new Error(modelText('Varmuuskopiossa on virheellinen pelaaja.'));
@@ -345,9 +385,10 @@ function meaningful(game, now) {
     || game.start !== null || game.period > 1 || game.away !== 'Vastustaja'
     || game.finished === true || game.status === 'finished'
     || Boolean(game.notes || game.title || game.detail)
-    || [...TEAMS].some(side => getActiveGoalie(game, side) !== null)) return true;
+    || [...TEAMS].some(side => getActiveGoalie(game, side) !== null
+      || getTeamColor(game, side).id !== DEFAULT_TEAM_COLORS[side])) return true;
   const standard = new Set(['id', 'date', 'version', 'home', 'away', 'period', 'periodLength',
-    'seconds', 'start', 'roster', 'events', 'archive', 'finished', 'status', 'activeGoalies']);
+    'seconds', 'start', 'roster', 'events', 'archive', 'finished', 'status', 'activeGoalies', 'teamColors']);
   // Unknown backup metadata can also contain the only work entered into a match.
   return Object.entries(game).some(([key, value]) => !standard.has(key)
     && (Array.isArray(value) ? value.length > 0 : record(value)

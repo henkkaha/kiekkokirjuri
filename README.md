@@ -4,7 +4,19 @@ Offline-ottelukirjuri Kiekko-Espoon väreissä. Julkaistu GitHub Pagesiin:
 
 **https://henkkaha.github.io/kiekkokirjuri/**
 
-Versio **0.7.3**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
+Versio **0.8.0**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
+
+### Päivitys 0.8.0: torjunta yhdellä painalluksella ja joukkuevärit
+
+Ottelunäkymässä on kummallekin joukkueelle oma suuri, valitun paitavärin mukainen **Torjunta**-painike. Yksi painallus tallentaa heti yhden torjunnan sekä vastustajalle laukauksen maalia kohti. Tapahtuma-aika tulee samasta painalluksesta. Maalivahdin puuttuminen ei avaa lisälomaketta: tapahtuma kirjataan silloin ilman pelaajanumeroa joukkueen tilastoihin. **Kumoa** poistaa viimeksi lisätyn merkinnän.
+
+Molempien joukkueiden paitaväri ja valinnainen maalivahdin numero asetetaan **Uusi ottelu**-lomakkeessa tai **Ottelun asetuksissa**. Värivaihtoehtoja on yhdeksän. Joukkueen nimi ja koti/vieras-teksti säilyvät värin rinnalla. Samat värit näkyvät tulostaulussa, tapahtumien joukkuevalinnoissa ja Pelaajat/Tilastot-välilehtien valinnoissa. Blue-, White- ja Yellow-esivalinnat ehdottavat vastaavaa väriä; käyttäjä voi vaihtaa sen.
+
+Maalivahdin voi myös valita tai vaihtaa torjuntapainikkeen alla olevasta erillisestä painikkeesta tai Pelaajat-näkymästä. Vaihto ei lisää tapahtumaa eikä muuta aiempien torjuntojen pelaajatietoja. Maali ja jäähy kirjataan edelleen tapahtumapainikkeesta, värillisestä joukkuevalinnasta ja tietolomakkeesta. Värit ja maalivahtivalinnat säilyvät offline-käytössä, varmuuskopiossa sekä otteluarkistossa.
+
+Varmennus: kaikki 79 automaattista testiä läpäistiin. Selaimessa testattiin ensimmäinen suora torjunta ilman maalivahtia, torjunta valitulle maalivahdille, molempien joukkueiden laukaus- ja torjuntamäärät, kumoaminen ja maalivahdin vaihto ilman ylimääräistä tapahtumaa. Ennen peliä asetettu numero 0 ja esivalinnan sukunimi toimivat. Koti/vieras-puolen vaihto siirsi numerot ja värit oikean joukkueen mukana; ryhmän vaihto poisti aiemman ryhmän maalivahtinumeron. Värit tarkistettiin maalin joukkuevalinnassa. FI/EN/SV sekä 320 px:n näkymä ja iPhonen simuloidut turva-alueet tarkistettiin. Palvelin pysäytettiin, sovellus avattiin uudelleen, värit ja maalivahdit säilyivät, ja torjunta sekä kumoaminen toimivat. Fyysistä iPhonea ei testattu.
+
+Puhekirjaus on tässä vaiheessa [tutkittu ja suunniteltu](docs/puhekirjaus-suunnitelma.md), ei käytössä oleva toiminto.
 
 ### Päivitys 0.7.3: GrIFK–EKS-kokoonpanot 28.11.2026
 
@@ -31,10 +43,10 @@ Turva-alueiden toteutus noudattaa [WebKitin ohjetta](https://webkit.org/blog/792
 ## Käyttö
 
 1. Avaa sovellus kerran verkkoyhteydellä. Valikon teksti **Valmis myös ilman yhteyttä** kertoo, että koko sovellus on tallennettu offline-käyttöä varten.
-2. Valitse **Uusi ottelu**, anna joukkueet ja valitse erän pituus. Voit valita valmiin EKS-kokoonpanon tai aloittaa tyhjillä pelaajalistoilla. Nykyinen ottelu siirtyy arkistoon.
+2. Valitse **Uusi ottelu**, anna joukkueet, paitavärit ja erän pituus. Voit asettaa maalivahtien numerot jo tässä. Voit valita valmiin EKS-kokoonpanon tai aloittaa tyhjillä pelaajalistoilla. Nykyinen ottelu siirtyy arkistoon.
 3. Lisää pelaajien numerot ja halutessasi sukunimet **Pelaajat**-välilehdellä. Numeroita ja nimiä voi täydentää myös jälkikäteen. Numero 0 on sallittu, ja sama numero voi kuulua eri joukkueiden pelaajille.
 4. Käynnistä erä. Kello laskee alaspäin. Pysäytä se pelikatkoilla; kellon asetuksista voi korjata jäljellä olevan ajan tai valmistella seuraavan erän.
-5. Kirjaa **Maali**, **Torjunta** tai **Jäähy** ja valitse joukkue. Maalille ja jäähylle täytetään pelaaja ja lisätiedot; maalille voi valita enintään kaksi syöttäjää. Torjunnoissa valitaan maalivahti kerran, minkä jälkeen **Torjunta → joukkue** tallentaa merkinnän heti. Tapahtuma-aika otetaan ensimmäisestä painalluksesta.
+5. Kirjaa torjunta suoraan torjuneen joukkueen värillisestä **Torjunta**-painikkeesta. Maalille ja jäähylle valitaan tapahtuma, joukkue ja lisätiedot; maalille voi valita enintään kaksi syöttäjää. Tapahtuma-aika otetaan ensimmäisestä painalluksesta.
 6. **Tilastot** näyttää joukkue- ja pelaajatilastot sekä tekstin ja PNG-kuvan viennin. **Ottelut** näyttää arkiston ja varmuuskopion viennin/palautuksen.
 
 ### Kieli: Suomi, English tai Svenska
@@ -45,13 +57,13 @@ Ensimmäisellä avauksella sovellus käyttää laitteen ensisijaista tuettua kie
 
 Ottelutiedostojen tapahtumatyypit ja valmiit jäähytiedot säilyvät alkuperäisessä muodossa. Niiden näyttöteksti käännetään valitulle kielelle; omia kuvauksia ja nimiä ei konekäännetä. Saman ottelun voi viedä eri kielillä vaihtamalla sovelluksen kielen ennen koosteen avaamista. Sovelluksen nimi pysyy kaikilla kielillä **Kiekkokirjuri**.
 
-### Torjunta kahdella painalluksella
+### Torjunta yhdellä painalluksella
 
-Paina **Torjunta** ja valitse torjuneen maalivahdin joukkue. Ensimmäisellä kerralla sovellus kysyy maalivahtia: valitse numero kokoonpanosta tai kirjoita se itse. Numero 0 toimii myös. Jos numero ei ole tiedossa, voit valita kirjaamisen ilman numeroa. Ensimmäinen torjunta tallentuu valinnan yhteydessä.
+Paina ottelunäkymässä torjuneen joukkueen värillistä **Torjunta**-painiketta. Torjunta tallentuu heti, ja vastustajalle kertyy yksi laukaus maalia kohti. Aikaleima otetaan painalluksesta. Myös ensimmäinen torjunta toimii näin ilman erillistä joukkuevalintaa tai tallennuspainiketta.
 
-Seuraavilla kerroilla **Torjunta → joukkue** tallentaa merkinnän heti ilman lisälomaketta tai tallennuspainiketta. Joukkuevalinnan yhteydessä näkyy valittu maalivahti. Kummallakin joukkueella on oma valinta, joka säilyy erien välillä ja sovelluksen uudelleenavauksessa myös offline-käytössä.
+Maalivahdin numero voidaan antaa ennen peliä **Uusi ottelu**-lomakkeessa tai **Ottelun asetuksissa**. Sen voi valita tai vaihtaa myös torjuntapainikkeen alla olevasta painikkeesta tai **Pelaajat**-välilehdellä. Kummallakin joukkueella on oma valinta. Jos numero puuttuu, torjunta kirjataan joukkueelle ilman pelaajanumeroa.
 
-Valitse **Vaihda maalivahti** torjunnan joukkuevalinnassa tai vaihda pelaavaa maalivahtia **Pelaajat**-välilehdellä. Vaihto koskee seuraavia torjuntoja ja säilyttää aiempien merkintöjen maalivahdit. Väärän torjunnan voi kumota heti **Kumoa**-painikkeella tai korjata tapahtumarivin kynästä. **Uusi ottelu** aloittaa tyhjillä maalivahtivalinnoilla; arkistoitu ottelu säilyttää omansa.
+Maalivahdin vaihto koskee seuraavia torjuntoja. Aikaisemmin ilman numeroa kirjatut tapahtumat eivät siirry automaattisesti myöhemmin valitulle maalivahdille; niitä voi korjata tapahtumarivin kynästä. Viimeisimmän torjunnan voi perua **Kumoa**-painikkeella. Uusi ottelu aloitetaan omilla kokoonpanoilla, väreillä ja maalivahtivalinnoilla.
 
 ### Laukaukset ja torjunnat
 

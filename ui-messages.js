@@ -1,6 +1,20 @@
-import { createTranslator } from './i18n.js?v=0.7.3';
+import { createTranslator } from './i18n.js?v=0.8.0';
 
 export const UI_MESSAGES = {
+  "Sininen": {"en": "Blue", "sv": "Blå"},
+  "Valkoinen": {"en": "White", "sv": "Vit"},
+  "Keltainen": {"en": "Yellow", "sv": "Gul"},
+  "Punainen": {"en": "Red", "sv": "Röd"},
+  "Vihreä": {"en": "Green", "sv": "Grön"},
+  "Musta": {"en": "Black", "sv": "Svart"},
+  "Oranssi": {"en": "Orange", "sv": "Orange"},
+  "Violetti": {"en": "Purple", "sv": "Lila"},
+  "Harmaa": {"en": "Gray", "sv": "Grå"},
+  "Paitaväri": {"en": "Shirt color", "sv": "Tröjfärg"},
+  "Maalivahti · numero": {"en": "Goalkeeper · number", "sv": "Målvakt · nummer"},
+  "Maalivahdin voi valita myöhemmin. Ilman numeroa torjunta kirjataan joukkueelle.": {"en": "You can choose the goalkeeper later. Saves without a number count toward the team total.", "sv": "Du kan välja målvakt senare. Räddningar utan nummer räknas till lagets total."},
+  "Torjuntoja: {count}": {"en": "Saves: {count}", "sv": "Räddningar: {count}"},
+  "Yksi painallus": {"en": "One tap", "sv": "Ett tryck"},
   "MV": {"en": "GK", "sv": "MV"},
   "Kokoonpanon maalivahti": {"en": "Goalkeeper listed in the lineup", "sv": "Målvakt i laguppställningen"},
   "Numeroa ei ole ilmoitettu.": {"en": "No jersey number supplied.", "sv": "Tröjnummer saknas."},

@@ -1,6 +1,7 @@
-import { createTranslator } from './i18n.js?v=0.7.3';
+import { createTranslator } from './i18n.js?v=0.8.0';
 
 export const MODEL_MESSAGES = {
+  'Valitse joukkueen väri.': {en:'Choose the team color.',sv:'Välj lagets färg.'},
   'Ottelun tietoja ei voi lukea. Tarkista varmuuskopion muoto.': { en: 'Could not read the match data. Check the backup format.', sv: 'Matchuppgifterna kunde inte läsas. Kontrollera säkerhetskopians format.' },
   '{label} ei ole kelvollinen luku.': { en: '{label} is not a valid number.', sv: '{label} är inte ett giltigt tal.' },
   'Erä': { en: 'Period', sv: 'Period' },
