@@ -4,7 +4,19 @@ Offline-ottelukirjuri Kiekko-Espoon väreissä. Julkaistu GitHub Pagesiin:
 
 **https://henkkaha.github.io/kiekkokirjuri/**
 
-Versio **0.8.1**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
+Versio **0.8.2**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
+
+### Päivitys 0.8.2: yhden ruudun kirjausnäkymä
+
+Ottelunäkymä käyttää ruudun korkeuden. Sivua tai kirjausnappeja ei vieritetä: vain Tapahtumat-listan sisältö liikkuu. Tulos, kello, torjunnat, maali, jäähy ja alavalikko pysyvät näkyvissä. Pelaajat-, Tilastot- ja Ottelut-näkymät sekä lomakkeet vierivät edelleen normaalisti.
+
+Torjuntapainikkeet ovat nyt 60 pikselin korkuiset (matalassa vaaka-asennossa 50 pikseliä). Niissä näkyy Torjunta sekä koti/vieras ja joukkueen nimi paitavärin päällä. Torjuntamäärät ovat tulostaulussa. Maalivahtien tiedot ja vaihtaminen löytyvät yläosan **Maalivahdit**-painikkeesta; valinnat ovat edelleen myös Pelaajat-välilehdellä ja Ottelun asetuksissa. Maalivahdin puuttuminen ei estä suoraa torjuntaa.
+
+Tulostaulua, ylätunnistetta ja alavalikkoa on tiivistetty. Uusi ottelu, Maalivahdit ja ottelun asetukset ovat samalla työkalurivillä. Tapahtumalistan Kaikki-valinnasta näkee myös seitsemää viimeisintä vanhemmat tapahtumat. Ilmoitukset eivät muuta kirjausnappien paikkoja.
+
+Matalassa vaaka-asennossa tulos, kello ja kirjauspainikkeet ovat vasemmalla, työkalut ja tapahtumalista oikealla. Myös 568 × 320 pikselin ruudulla kaikki kirjaustoiminnot mahtuvat näkyviin ja painikkeet ovat vähintään 44 pikselin korkuisia.
+
+Varmennus: 79 automaattista testiä läpäistiin. Selaimessa tarkistettiin 320 × 568, 390 × 844, 440 × 956, 568 × 320, 667 × 375 ja 956 × 440 pikselin näkymät, FI/EN/SV sekä iPhonen simuloidut turva-alueet. Nappien päältä vierittäminen ei liikuttanut sivua tai painikkeita; tapahtumalista vieri itsenäisesti. Torjunta, kumoaminen sekä kellon käynnistys ja pysäytys säilyttivät painikkeiden paikat. Maalivahdin vaihtaminen ei lisännyt tapahtumaa. Pelaajat- ja Tilastot-näkymien normaali vieritys sekä pitkän asetuslomakkeen vieritys säilyivät. Testipalvelin pysäytettiin, sovellus avattiin uudelleen ja torjunta sekä kumoaminen toimivat ilman palvelinta. Fyysistä iPhonea ei testattu.
 
 ### Päivitys 0.8.1: kompaktit ja paikallaan pysyvät kirjauspainikkeet
 
@@ -71,7 +83,7 @@ Ottelutiedostojen tapahtumatyypit ja valmiit jäähytiedot säilyvät alkuperäi
 
 Paina ottelunäkymässä torjuneen joukkueen värillistä **Torjunta**-painiketta. Torjunta tallentuu heti, ja vastustajalle kertyy yksi laukaus maalia kohti. Aikaleima otetaan painalluksesta. Myös ensimmäinen torjunta toimii näin ilman erillistä joukkuevalintaa tai tallennuspainiketta.
 
-Maalivahdin numero voidaan antaa ennen peliä **Uusi ottelu**-lomakkeessa tai **Ottelun asetuksissa**. Sen voi valita tai vaihtaa myös torjuntapainikkeen alla olevasta painikkeesta tai **Pelaajat**-välilehdellä. Kummallakin joukkueella on oma valinta. Jos numero puuttuu, torjunta kirjataan joukkueelle ilman pelaajanumeroa.
+Maalivahdin numero voidaan antaa ennen peliä **Uusi ottelu**-lomakkeessa tai **Ottelun asetuksissa**. Sen voi valita tai vaihtaa myös ottelunäkymän **Maalivahdit**-painikkeesta tai **Pelaajat**-välilehdellä. Kummallakin joukkueella on oma valinta. Jos numero puuttuu, torjunta kirjataan joukkueelle ilman pelaajanumeroa.
 
 Maalivahdin vaihto koskee seuraavia torjuntoja. Aikaisemmin ilman numeroa kirjatut tapahtumat eivät siirry automaattisesti myöhemmin valitulle maalivahdille; niitä voi korjata tapahtumarivin kynästä. Viimeisimmän torjunnan voi perua **Kumoa**-painikkeella. Uusi ottelu aloitetaan omilla kokoonpanoilla, väreillä ja maalivahtivalinnoilla.
 

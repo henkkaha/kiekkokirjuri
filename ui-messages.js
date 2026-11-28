@@ -1,6 +1,10 @@
-import { createTranslator } from './i18n.js?v=0.8.1';
+import { createTranslator } from './i18n.js?v=0.8.2';
 
 export const UI_MESSAGES = {
+  "Maalivahdit": {"en": "Goalkeepers", "sv": "Målvakter"},
+  "Laukaukset": {"en": "Shots", "sv": "Skott"},
+  "Kaikki": {"en": "All", "sv": "Alla"},
+  "Viimeisimmät": {"en": "Latest", "sv": "Senaste"},
   "Sininen": {"en": "Blue", "sv": "Blå"},
   "Valkoinen": {"en": "White", "sv": "Vit"},
   "Keltainen": {"en": "Yellow", "sv": "Gul"},

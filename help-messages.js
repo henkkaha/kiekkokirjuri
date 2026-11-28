@@ -32,7 +32,7 @@ export const HELP_COPY = {
         "Valitse kummallekin joukkueelle paitaväri <strong>Uusi ottelu</strong> -lomakkeessa tai <strong>Ottelun asetuksissa</strong>. Väri näkyy tulostaulussa, torjuntapainikkeissa ja joukkuevalinnoissa. Joukkueen nimi näkyy aina värin rinnalla, jotta tunnistaminen ei perustu pelkkään väriin.",
         "Valitse <strong>Pelaajat</strong>-välilehdellä ensin joukkue ja lisää pelinumerot. Numero 0 käy myös. Sukunimi on valinnainen, ja sen voi täydentää pelaajaa napauttamalla.",
         "Tapahtumaan kirjoitettu uusi numero lisätään tämän ottelun kokoonpanoon. Molemmilla joukkueilla voi olla sama numero.",
-        "Voit asettaa kummankin joukkueen maalivahdin numeron jo <strong>Uusi ottelu</strong> -lomakkeessa tai myöhemmin <strong>Ottelun asetuksissa</strong>. Voit myös valita maalivahdin <strong>Pelaajat</strong>-välilehdellä tai torjuntapainikkeen alta. Valinta säilyy erien välillä ja sovelluksen sulkemisen jälkeen myös ilman nettiä."
+        "Voit asettaa kummankin joukkueen maalivahdin numeron jo <strong>Uusi ottelu</strong> -lomakkeessa tai myöhemmin <strong>Ottelun asetuksissa</strong>. Voit myös valita maalivahdin ottelunäkymän <strong>Maalivahdit</strong>-painikkeesta tai <strong>Pelaajat</strong>-välilehdellä. Valinta säilyy erien välillä ja sovelluksen sulkemisen jälkeen myös ilman nettiä."
       ]
     },
     {
@@ -46,10 +46,11 @@ export const HELP_COPY = {
     {
       "title": "Maalit, torjunnat ja jäähyt",
       "paragraphs": [
+        "Ottelunäkymässä kello ja kirjauspainikkeet pysyvät paikallaan. Vain <strong>Tapahtumat</strong>-lista vierii, kun selaat aiempia kirjauksia.",
         "<strong>Maali:</strong> valitse maalin tehnyt joukkue, maalintekijä ja halutessasi enintään kaksi syöttäjää. Pelaajan voi jättää avoimeksi ja täydentää myöhemmin.",
         "<strong>Torjunta:</strong> napauta ottelunäkymässä torjuneen joukkueen värillistä <strong>Torjunta</strong>-painiketta. Torjunta ja tapahtuma-aika tallentuvat heti ilman lisäkysymyksiä tai vahvistusta.",
         "Torjunta käyttää joukkueelle valittua maalivahtia. Jos maalivahtia ei ole valittu, torjunta kirjataan heti ilman numeroa joukkueen tilastoihin. Vastustajalle lisätään samalla yksi laukaus maalia kohti.",
-        "<strong>Valitse maalivahti</strong> tai <strong>Vaihda maalivahti</strong> löytyy joukkueen torjuntapainikkeen alta. Maalivahdin voi vaihtaa myös <strong>Pelaajat</strong>-välilehdellä tai <strong>Ottelun asetuksissa</strong>. Vaihto ei kirjaa torjuntaa ja vaikuttaa vain seuraaviin torjuntoihin. Täydennä tai korjaa aiempien merkintöjen maalivahdit erikseen tapahtumarivin kynästä.",
+        "Paina ottelunäkymässä <strong>Maalivahdit</strong> ja valitse joukkue, jonka maalivahdin haluat asettaa tai vaihtaa. Maalivahdin voi vaihtaa myös <strong>Pelaajat</strong>-välilehdellä tai <strong>Ottelun asetuksissa</strong>. Vaihto ei kirjaa torjuntaa ja vaikuttaa vain seuraaviin torjuntoihin. Täydennä tai korjaa aiempien merkintöjen maalivahdit erikseen tapahtumarivin kynästä.",
         "<div class=\"help-formula\"><strong>Laukaukset maalia kohti</strong><span>omat maalit + vastustajan torjunnat</span></div>",
         "Maali lisää myös laukauksen tehneelle joukkueelle. Ohi menneitä ja blokattuja laukauksia ei kirjata näihin lukuihin.",
         "<strong>Jäähy:</strong> valitse rangaistuksen saanut joukkue ja pelaaja, syy sekä rangaistuksen tyyppi. Tarvittaessa valitse <strong>Muu rangaistus / oma minuuttimäärä</strong>. Sovellus kirjaa rangaistukset, mutta ei laske niiden päättymistä pelitilanteen mukaan."
@@ -109,6 +110,10 @@ export const HELP_COPY = {
 };
 
 export const HELP_MESSAGES = {
+  "Ottelunäkymässä kello ja kirjauspainikkeet pysyvät paikallaan. Vain <strong>Tapahtumat</strong>-lista vierii, kun selaat aiempia kirjauksia.": {
+    "en": "The clock and recording buttons stay in place in the match view. Only the <strong>Events</strong> list scrolls when you review earlier entries.",
+    "sv": "Klockan och registreringsknapparna ligger kvar på samma plats i matchvyn. Bara listan <strong>Händelser</strong> rullar när du bläddrar bland tidigare registreringar."
+  },
   "PIKAOHJE": {
     "en": "QUICK START",
     "sv": "KOM IGÅNG"
@@ -321,9 +326,9 @@ export const HELP_MESSAGES = {
     "en": "Record a save with one tap on the coloured button for the team that made the save. For goals and penalties, choose the team, add the details and save.",
     "sv": "Registrera en räddning med ett tryck på den färgade knappen för laget som räddade. För mål och utvisningar väljer du lag, fyller i uppgifterna och sparar."
   },
-  "Voit asettaa kummankin joukkueen maalivahdin numeron jo <strong>Uusi ottelu</strong> -lomakkeessa tai myöhemmin <strong>Ottelun asetuksissa</strong>. Voit myös valita maalivahdin <strong>Pelaajat</strong>-välilehdellä tai torjuntapainikkeen alta. Valinta säilyy erien välillä ja sovelluksen sulkemisen jälkeen myös ilman nettiä.": {
-    "en": "Set each team’s goalkeeper number in the <strong>New match</strong> form or later in <strong>Match settings</strong>. You can also choose a goalkeeper on the <strong>Players</strong> tab or below the save button. The selection is retained between periods and after closing the app, including offline.",
-    "sv": "Ange målvaktens nummer för varje lag redan i formuläret <strong>Ny match</strong> eller senare i <strong>Matchinställningar</strong>. Du kan också välja målvakt på fliken <strong>Spelare</strong> eller under räddningsknappen. Valet finns kvar mellan perioderna och när du stänger appen, även utan internet."
+  "Voit asettaa kummankin joukkueen maalivahdin numeron jo <strong>Uusi ottelu</strong> -lomakkeessa tai myöhemmin <strong>Ottelun asetuksissa</strong>. Voit myös valita maalivahdin ottelunäkymän <strong>Maalivahdit</strong>-painikkeesta tai <strong>Pelaajat</strong>-välilehdellä. Valinta säilyy erien välillä ja sovelluksen sulkemisen jälkeen myös ilman nettiä.": {
+    "en": "Set each team’s goalkeeper number in the <strong>New match</strong> form or later in <strong>Match settings</strong>. You can also choose a goalkeeper using <strong>Goalkeepers</strong> in the match view or on the <strong>Players</strong> tab. The selection is retained between periods and after closing the app, including offline.",
+    "sv": "Ange målvaktens nummer för varje lag redan i formuläret <strong>Ny match</strong> eller senare i <strong>Matchinställningar</strong>. Du kan också välja målvakt via <strong>Målvakter</strong> i matchvyn eller på fliken <strong>Spelare</strong>. Valet finns kvar mellan perioderna och när du stänger appen, även utan internet."
   },
   "<strong>Torjunta:</strong> napauta ottelunäkymässä torjuneen joukkueen värillistä <strong>Torjunta</strong>-painiketta. Torjunta ja tapahtuma-aika tallentuvat heti ilman lisäkysymyksiä tai vahvistusta.": {
     "en": "<strong>Save:</strong> tap the coloured <strong>Save</strong> button for the team that made the save on the match screen. The save and event time are recorded immediately, without extra questions or confirmation.",
@@ -333,9 +338,9 @@ export const HELP_MESSAGES = {
     "en": "The save uses the goalkeeper selected for that team. If no goalkeeper is selected, the save is recorded immediately without a number in the team totals. One shot on goal is also added to the opposing team.",
     "sv": "Räddningen registreras på lagets valda målvakt. Om ingen målvakt har valts registreras räddningen direkt utan nummer i lagets statistik. Motståndarlaget får samtidigt ett skott på mål."
   },
-  "<strong>Valitse maalivahti</strong> tai <strong>Vaihda maalivahti</strong> löytyy joukkueen torjuntapainikkeen alta. Maalivahdin voi vaihtaa myös <strong>Pelaajat</strong>-välilehdellä tai <strong>Ottelun asetuksissa</strong>. Vaihto ei kirjaa torjuntaa ja vaikuttaa vain seuraaviin torjuntoihin. Täydennä tai korjaa aiempien merkintöjen maalivahdit erikseen tapahtumarivin kynästä.": {
-    "en": "<strong>Choose goalkeeper</strong> or <strong>Change goalkeeper</strong> is below the team’s save button. You can also change the goalkeeper on the <strong>Players</strong> tab or in <strong>Match settings</strong>. Changing the goalkeeper does not record a save and only affects future saves. Add or correct goalkeepers on earlier entries individually using the pencil on the event row.",
-    "sv": "<strong>Välj målvakt</strong> eller <strong>Byt målvakt</strong> finns under lagets räddningsknapp. Du kan också byta målvakt på fliken <strong>Spelare</strong> eller i <strong>Matchinställningar</strong>. Bytet registrerar ingen räddning och gäller bara kommande räddningar. Komplettera eller korrigera målvakter för tidigare registreringar separat med pennan på händelseraden."
+  "Paina ottelunäkymässä <strong>Maalivahdit</strong> ja valitse joukkue, jonka maalivahdin haluat asettaa tai vaihtaa. Maalivahdin voi vaihtaa myös <strong>Pelaajat</strong>-välilehdellä tai <strong>Ottelun asetuksissa</strong>. Vaihto ei kirjaa torjuntaa ja vaikuttaa vain seuraaviin torjuntoihin. Täydennä tai korjaa aiempien merkintöjen maalivahdit erikseen tapahtumarivin kynästä.": {
+    "en": "Tap <strong>Goalkeepers</strong> in the match view and choose the team whose goalkeeper you want to select or change. You can also change the goalkeeper on the <strong>Players</strong> tab or in <strong>Match settings</strong>. Changing the goalkeeper does not record a save and only affects future saves. Add or correct goalkeepers on earlier entries individually using the pencil on the event row.",
+    "sv": "Tryck på <strong>Målvakter</strong> i matchvyn och välj laget vars målvakt du vill ange eller byta. Du kan också byta målvakt på fliken <strong>Spelare</strong> eller i <strong>Matchinställningar</strong>. Bytet registrerar ingen räddning och gäller bara kommande räddningar. Komplettera eller korrigera målvakter för tidigare registreringar separat med pennan på händelseraden."
   },
   "<strong>Uusi ottelu</strong> siirtää nykyisen pelin arkistoon ja aloittaa uuden tuloksesta 0–0. Valitse uudelle pelille kokoonpano ja joukkueiden paitavärit sekä halutessasi maalivahdit.": {
     "en": "<strong>New match</strong> moves the current match to the archive and starts a new one at 0–0. Choose the line-up and team shirt colours for the new match, and optionally the goalkeepers.",
