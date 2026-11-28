@@ -1,6 +1,6 @@
-import { createTranslator, getLanguage } from './i18n.js?v=0.8.0';
-import { HELP_COPY, HELP_MESSAGES } from './help-messages.js?v=0.8.0';
-export { HELP_MESSAGES } from './help-messages.js?v=0.8.0';
+import { createTranslator, getLanguage } from './i18n.js?v=0.8.1';
+import { HELP_COPY, HELP_MESSAGES } from './help-messages.js?v=0.8.1';
+export { HELP_MESSAGES } from './help-messages.js?v=0.8.1';
 
 const translate = createTranslator(HELP_MESSAGES);
 

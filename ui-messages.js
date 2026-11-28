@@ -1,4 +1,4 @@
-import { createTranslator } from './i18n.js?v=0.8.0';
+import { createTranslator } from './i18n.js?v=0.8.1';
 
 export const UI_MESSAGES = {
   "Sininen": {"en": "Blue", "sv": "Blå"},

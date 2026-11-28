@@ -1,15 +1,15 @@
 import { VERSION, createGame, normalizeState, elapsed, elapsedPrecise, formatTime, score, teamStats,
   playerStats, periodStats, archiveAndNew, openArchive, validateEvent,
-  normalizeNumber, nextPeriod, snapshot, getActiveGoalie, setActiveGoalie, recordSave, TEAM_COLORS, getTeamColor, setTeamColor } from './model.js?v=0.8.0';
-import { setupPWA, checkForUpdate, refreshPWALanguage } from './pwa.js?v=0.8.0';
-import { textReport, createPoster } from './reports.js?v=0.8.0';
-import { renderHelp } from './help.js?v=0.8.0';
+  normalizeNumber, nextPeriod, snapshot, getActiveGoalie, setActiveGoalie, recordSave, TEAM_COLORS, getTeamColor, setTeamColor } from './model.js?v=0.8.1';
+import { setupPWA, checkForUpdate, refreshPWALanguage } from './pwa.js?v=0.8.1';
+import { textReport, createPoster } from './reports.js?v=0.8.1';
+import { renderHelp } from './help.js?v=0.8.1';
 import { FEEDBACK_STORAGE_KEY, FEEDBACK_KINDS, getFeedbackKinds, FEEDBACK_LIMITS, createFeedbackDraft,
-  normalizeFeedbackDraft, validateFeedbackDraft, buildFeedbackEmail } from './feedback.js?v=0.8.0';
+  normalizeFeedbackDraft, validateFeedbackDraft, buildFeedbackEmail } from './feedback.js?v=0.8.1';
 
-import { LANGUAGE_STORAGE_KEY, LANGUAGES, getLanguage, getLocale, resolveLanguage, setLanguage } from './i18n.js?v=0.8.0';
-import { uiText as tr } from './ui-messages.js?v=0.8.0';
-import { domainText } from './domain-messages.js?v=0.8.0';
+import { LANGUAGE_STORAGE_KEY, LANGUAGES, getLanguage, getLocale, resolveLanguage, setLanguage } from './i18n.js?v=0.8.1';
+import { uiText as tr } from './ui-messages.js?v=0.8.1';
+import { domainText } from './domain-messages.js?v=0.8.1';
 
 let savedLanguage = null;
 try { savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY); } catch { /* Language remains usable in memory. */ }
@@ -167,10 +167,56 @@ function heading(title, description, action='') {
 }
 const newButton = () => `<button class="button" data-action="new-game">${icon('new')}${tr("Uusi ottelu")}</button>`;
 
+// Keep the live controls themselves in place when only the match data changes.
+// This patcher is limited to the input-free match view; other views retain their
+// existing form lifecycle. Event keys keep a new row from becoming an old row.
+function liveNodeKey(node) {
+  return node.nodeType===1 ? (node.id ? `id:${node.id}` : node.getAttribute('data-live-key')) : null;
+}
+function patchLiveChildren(parent, nextParent) {
+  const keyed = new Map([...parent.childNodes].map(node=>[liveNodeKey(node),node]).filter(([key])=>key));
+  let position = parent.firstChild;
+  for (const next of [...nextParent.childNodes]) {
+    const key = liveNodeKey(next);
+    let current = key ? keyed.get(key) : position;
+    if (current && (liveNodeKey(current)!==key || current.nodeType!==next.nodeType || current.nodeName!==next.nodeName)) current=null;
+    if (!current) {
+      current=next.cloneNode(true);
+      parent.insertBefore(current,position);
+    } else {
+      if (current!==position) parent.insertBefore(current,position);
+      if (current.nodeType===1) {
+        for (const attribute of [...current.attributes]) if (!next.hasAttribute(attribute.name)) current.removeAttribute(attribute.name);
+        for (const attribute of [...next.attributes]) if (current.getAttribute(attribute.name)!==attribute.value) current.setAttribute(attribute.name,attribute.value);
+        patchLiveChildren(current,next);
+      } else if (current.nodeValue!==next.nodeValue) current.nodeValue=next.nodeValue;
+    }
+    position=current.nextSibling;
+  }
+  while (position) {
+    const next=position.nextSibling;
+    position.remove();
+    position=next;
+  }
+}
 function render() {
+  const main=$('main');
+  const keepLive=view==='ottelu' && main.dataset.view==='ottelu' && main.dataset.gameId===state.id;
+  const pagePosition=keepLive ? {left:window.scrollX,top:window.scrollY} : null;
+  const eventScroll=keepLive ? main.querySelector('.event-panel-body')?.scrollTop : null;
   renderChrome();
   const views = { ottelu:renderLive, pelaajat:renderRoster, tilastot:renderStats, ottelut:renderArchives };
-  $('main').innerHTML = `<div>${views[view]()}</div>`;
+  const markup=`<div>${views[view]()}</div>`;
+  if (keepLive) {
+    const template=document.createElement('template');
+    template.innerHTML=markup;
+    patchLiveChildren(main,template.content);
+    const eventBody=main.querySelector('.event-panel-body');
+    if(eventBody && eventScroll!==null) eventBody.scrollTop=eventScroll;
+    if(window.scrollX!==pagePosition.left || window.scrollY!==pagePosition.top) window.scrollTo({...pagePosition,behavior:'instant'});
+  } else main.innerHTML=markup;
+  main.dataset.view=view;
+  main.dataset.gameId=state.id;
   $('navigation').innerHTML = [['ottelu','rink',tr("Ottelu")],['pelaajat','people',tr("Pelaajat")],['tilastot','chart',tr("Tilastot")],['ottelut','archive',tr("Ottelut")]].map(([id,i,label]) =>
     `<a class="nav-item${view===id?' active':''}" href="#${id}" ${view===id?'aria-current="page"':''}>${icon(i)}<span>${label}</span></a>`).join('');
 }
@@ -244,7 +290,10 @@ function applyTeamSetup(game, data) {
 function directSaveButtons(stats) {
   return `<div class="quick-save-grid">${['home','away'].map(team=>{
     const goalie=getActiveGoalie(state,team);
-    return `<section class="quick-save-card" style="${teamStyle(team)}"><button type="button" class="quick-save" data-action="quick-save" data-team="${team}" aria-label="${escapeHTML(tr('Kirjaa torjunta: {team}',{team:displayTeam(state,team)}))}"><span class="quick-save-side">${teamLabel(team)} · ${tr(colorLabels[getTeamColor(state,team).id])}</span><strong class="quick-save-team">${escapeHTML(displayTeam(state,team))}</strong><span class="quick-save-action">${icon('save')}<span>${domainText('Torjunta')}</span><b class="quick-save-total" aria-label="${tr('Torjuntoja: {count}',{count:stats[team].saves})}">${stats[team].saves}</b></span><span class="quick-save-keeper">${escapeHTML(goalie===null||goalie===''?tr("Ilman numeroa"):jerseyName(goalie,team))}</span></button><button type="button" class="quick-save-settings" data-action="change-goalie" data-team="${team}" aria-label="${escapeHTML(tr(goalie===null?'Valitse maalivahti: {team}':'Vaihda maalivahti: {team}',{team:displayTeam(state,team)}))}">${icon('settings')}${goalie===null?tr("Valitse maalivahti"):tr("Vaihda maalivahti")}</button></section>`;
+    const name=displayTeam(state,team), color=tr(colorLabels[getTeamColor(state,team).id]);
+    const keeper=goalie===null||goalie===''?tr("Ilman numeroa"):jerseyName(goalie,team);
+    const changeLabel=tr(goalie===null?'Valitse maalivahti: {team}':'Vaihda maalivahti: {team}',{team:name});
+    return `<section class="quick-save-card" data-live-key="save-card-${team}" style="${teamStyle(team)}"><button type="button" class="quick-save" data-live-key="save-${team}" data-action="quick-save" data-team="${team}" aria-label="${escapeHTML(tr('Kirjaa torjunta: {team}',{team:name}))}" aria-describedby="save-goalie-${team}" title="${escapeHTML(`${teamLabel(team)} · ${name} · ${color} · ${keeper}`)}"><span class="quick-save-side">${tr(team==='home'?'Koti':'Vieras')} · ${color}</span><strong class="quick-save-team" title="${escapeHTML(name)}">${escapeHTML(name)}</strong><span class="quick-save-action">${icon('save')}<span>${domainText('Torjunta')}</span><b class="quick-save-total" aria-label="${tr('Torjuntoja: {count}',{count:stats[team].saves})}">${stats[team].saves}</b></span><span class="quick-save-keeper" id="save-goalie-${team}" title="${escapeHTML(keeper)}">${escapeHTML(keeper)}</span></button><button type="button" class="quick-save-settings" data-live-key="goalie-${team}" data-action="change-goalie" data-team="${team}" aria-label="${escapeHTML(changeLabel)}" title="${escapeHTML(changeLabel)}">${icon('settings')}<span>${goalie===null?tr("Valitse maalivahti"):tr("Vaihda maalivahti")}</span></button></section>`;
   }).join('')}</div>`;
 }
 function directSave(team) {
@@ -269,23 +318,23 @@ function renderLive() {
     <div class="live-layout"><div class="live-left">
       <section class="scoreboard" aria-label="${tr("Tulostaulu")}">
         <div class="board-top"><span class="match-state ${running?'running':''}" id="match-state"><span class="status-dot"></span>${status}</span><button class="icon-button board-settings" data-action="match-settings" aria-label="${tr("Ottelun ja kellon asetukset")}">${icon('settings')}</button></div>
-        <div class="scoreline"><div class="team-block">${teamCrest('home')}<div class="team-name">${escapeHTML(displayTeam(state,'home'))}</div><div class="team-role">${colorDot('home')}${tr("Koti")}</div></div>
+        <div class="scoreline"><div class="team-block">${teamCrest('home')}<div class="team-name" title="${escapeHTML(displayTeam(state,'home'))}">${escapeHTML(displayTeam(state,'home'))}</div><div class="team-role">${colorDot('home')}${tr("Koti")}</div></div>
           <div class="score-digits" aria-label="${tr('Tulos {home}–{away}',{home:tally.home,away:tally.away})}"><span class="score-number" data-score="home">${tally.home}</span><span class="score-divider">:</span><span class="score-number" data-score="away">${tally.away}</span></div>
-          <div class="team-block">${teamCrest('away')}<div class="team-name">${escapeHTML(displayTeam(state,'away'))}</div><div class="team-role">${colorDot('away')}${tr("Vieras")}</div></div></div>
+          <div class="team-block">${teamCrest('away')}<div class="team-name" title="${escapeHTML(displayTeam(state,'away'))}">${escapeHTML(displayTeam(state,'away'))}</div><div class="team-role">${colorDot('away')}${tr("Vieras")}</div></div></div>
         <div class="clock-strip"><div class="clock-info"><div class="period-tag"><b>${tr('{period}. erä',{period:state.period})}</b>${formatTime(state.periodLength)}</div><div class="clock-value" id="clock" aria-label="${tr("Aikaa jäljellä")}">${formatTime(state.periodLength-played)}</div></div>
           <button class="clock-button ${running?'is-running':''}" data-action="${state.finished?'reopen-game':ended?'next-period':'toggle-clock'}" id="clock-toggle">${icon(running?'pause':'play')}${clockAction}</button></div>
         <div class="board-stats"><span class="board-stat"><abbr title="${tr("Laukaukset maalia kohti")}">${tr("Laukaukset maalia kohti")}</abbr><strong data-stat="shots">${stats.home.shots} – ${stats.away.shots}</strong></span><span class="board-stat">${tr("Torjunnat")} <strong data-stat="saves">${stats.home.saves} – ${stats.away.saves}</strong></span></div>
       </section>
       <section class="action-section" aria-labelledby="actions-title"><div class="section-heading"><h2 id="actions-title">${tr("Torjunnat")}</h2><span class="eyebrow">${tr("Yksi painallus")}</span></div>
         ${directSaveButtons(stats)}
-        <div class="action-grid other-actions">${[['Maali','goal'],['Jäähy','penalty']].map(([name,i])=>`<button class="event-action ${i}" data-action="event" data-type="${name}">${icon(i)}<span class="action-label">${domainText(name)}${icon('arrow')}</span></button>`).join('')}</div>
+        <div class="action-grid other-actions">${[['Maali','goal'],['Jäähy','penalty']].map(([name,i])=>`<button class="event-action ${i}" data-live-key="event-${i}" data-action="event" data-type="${name}">${icon(i)}<span class="action-label">${domainText(name)}${icon('arrow')}</span></button>`).join('')}</div>
         <p class="action-hint">${icon('info')}${tr("Maali ja torjunta päivittävät laukaukset automaattisesti.")}</p>
       </section>
       <div class="live-note">${icon('people')}<div><b>${tr("Numerolla nopeasti, nimellä myöhemminkin.")}</b>${tr("Lisää kokoonpano Pelaajat-välilehdellä. Voit kirjata tapahtuman myös ilman pelaajatietoja.")}</div></div>
     </div><div class="live-right">
       <section class="panel event-panel"><div class="panel-heading"><h2>${tr("Tapahtumat")}</h2><span class="count-badge" aria-label="${tr('{count} tapahtumaa',{count:state.events.length})}">${state.events.length}</span></div>
-        ${visible.length ? `<ol class="event-list">${visible.map(e=>eventRow(e)).join('')}</ol>` : empty('rink',tr("Tästä se alkaa."),tr("Aloita kello ja kirjaa kentän tapahtumat. Ottelun tarina rakentuu tähän."))}
-        ${events.length>7 ? `<div class="event-panel-footer"><button class="text-button" data-action="all-events">${viewAllEvents?tr("Näytä viimeisimmät"):tr('Näytä kaikki {count} tapahtumaa',{count:events.length})}${icon('arrow')}</button></div>` : ''}
+        <div class="event-panel-body" role="region" aria-label="${tr("Tapahtumat")}" tabindex="0">${visible.length ? `<ol class="event-list">${visible.map(e=>eventRow(e)).join('')}</ol>` : empty('rink',tr("Tästä se alkaa."),tr("Aloita kello ja kirjaa kentän tapahtumat. Ottelun tarina rakentuu tähän."))}</div>
+        <div class="event-panel-footer">${events.length>7 ? `<button class="text-button" data-action="all-events">${viewAllEvents?tr("Näytä viimeisimmät"):tr('Näytä kaikki {count} tapahtumaa',{count:events.length})}${icon('arrow')}</button>` : ''}</div>
       </section>
       <div class="view-footer"><span>${icon('lock')}${tr("Tallennetaan tälle laitteelle")}</span><span>${tr("Tapahtumissa kulunut peliaika")}</span></div>
     </div></div>`;
@@ -295,7 +344,7 @@ function eventRow(event, game=state, editable=true) {
   const title = event.type === 'Laukaus' ? tr('Laukausyritys') : domainText(event.type);
   const details = event.type === 'Jäähy' ? [domainText(event.penaltyLabel) || `${event.minutes} min`,domainText(event.reason)].filter(Boolean).join(' · ') :
     event.assists?.length ? tr('Syötöt: {players}',{players:event.assists.map(n=>jerseyName(n,event.team,game)).join(', ')}) : '';
-  return `<li class="event-row"><div class="event-time">${formatTime(event.time)}<small>${tr('{period}. ERÄ',{period:event.period})}</small></div><div class="event-symbol ${eventClass(event.type)}">${icon(eventIcon(event.type))}</div><div class="event-body"><div class="event-title">${escapeHTML(title)}${player?` <span>${escapeHTML(player)}</span>`:''}</div><div class="event-subtitle">${colorDot(event.team,game)}${escapeHTML(displayTeam(game,event.team))}</div>${details?`<div class="event-meta">${escapeHTML(details)}</div>`:''}${event.detail?`<div class="event-meta">${escapeHTML(event.detail)}</div>`:''}${event.type==='Laukaus'?`<div class="event-meta">${tr("Vanha kirjaus · ei sisälly laukauksiin maalia kohti")}</div>`:''}</div>${editable?`<button class="event-edit" data-action="edit-event" data-id="${escapeHTML(event.id)}" aria-label="${escapeHTML(tr('Muokkaa: {event}',{event:title}))}, ${formatTime(event.time)}, ${escapeHTML(displayTeam(game,event.team))}">${icon('edit')}</button>`:''}</li>`;
+  return `<li class="event-row" data-live-key="event-row-${escapeHTML(event.id)}"><div class="event-time">${formatTime(event.time)}<small>${tr('{period}. ERÄ',{period:event.period})}</small></div><div class="event-symbol ${eventClass(event.type)}">${icon(eventIcon(event.type))}</div><div class="event-body"><div class="event-title">${escapeHTML(title)}${player?` <span>${escapeHTML(player)}</span>`:''}</div><div class="event-subtitle">${colorDot(event.team,game)}${escapeHTML(displayTeam(game,event.team))}</div>${details?`<div class="event-meta">${escapeHTML(details)}</div>`:''}${event.detail?`<div class="event-meta">${escapeHTML(event.detail)}</div>`:''}${event.type==='Laukaus'?`<div class="event-meta">${tr("Vanha kirjaus · ei sisälly laukauksiin maalia kohti")}</div>`:''}</div>${editable?`<button class="event-edit" data-action="edit-event" data-id="${escapeHTML(event.id)}" aria-label="${escapeHTML(tr('Muokkaa: {event}',{event:title}))}, ${formatTime(event.time)}, ${escapeHTML(displayTeam(game,event.team))}">${icon('edit')}</button>`:''}</li>`;
 }
 function teamTabs(selected, action) {
   return `<div class="tabs" role="group" aria-label="${tr("Joukkue")}">${['home','away'].map(t=>`<button class="tab-button ${selected===t?'active':''}" data-action="${action}" data-team="${t}" aria-pressed="${selected===t}">${colorDot(t)}${escapeHTML(displayTeam(state,t))}</button>`).join('')}</div>`;

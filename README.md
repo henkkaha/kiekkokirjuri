@@ -4,7 +4,17 @@ Offline-ottelukirjuri Kiekko-Espoon väreissä. Julkaistu GitHub Pagesiin:
 
 **https://henkkaha.github.io/kiekkokirjuri/**
 
-Versio **0.8.0**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
+Versio **0.8.1**. Ei palvelinta, käyttäjätunnuksia, analytiikkaa tai ulkoisia ajonaikaisia riippuvuuksia. Ottelut pysyvät käyttäjän laitteen selaintallennuksessa.
+
+### Päivitys 0.8.1: kompaktit ja paikallaan pysyvät kirjauspainikkeet
+
+Torjuntapainikkeiden korkeus on 112 pikseliä aiemman vähintään 145 pikselin sijaan. Maalivahdin valinnalla on oma 44 pikselin painike. Joukkueen nimi, maalivahti ja lukumäärä käyttävät omia varattuja rivejään; pitkät nimet lyhenevät näkyvissä, mutta koko nimi säilyy saavutettavassa nimessä tai kuvauksessa sekä otsikkotekstissä.
+
+Ottelun kirjauspainikkeet säilyvät samoina sivuelementteinä, kun tapahtumia, tulosta tai kelloa päivitetään. Napit eivät hypi painallusanimaatiossa, ja kellon tilatekstin vaihtuminen ei muuta rivijakoa. Tapahtumat vierivät oman vakiokorkuisen alueensa sisällä. Ensimmäinen kirjaus, kahdeksannen tapahtuman Näytä kaikki -valinta ja kumoaminen eivät muuta kirjausnäkymän korkeutta. Sivun ja tapahtumalistan vierityskohta säilytetään tavallisissa päivityksissä.
+
+Tulostaulun koristekuvioiden leikkaus ei enää muodosta sisäistä vieritysaluetta, joten kellopainikkeen kohdistaminen ei vieritä tulostaulua kehyksensä sisällä.
+
+Varmennus: 79 automaattista testiä läpäistiin. Selaimessa tarkistettiin 320, 390 ja 440 pikselin näkymät, FI/EN/SV, iPhonen simuloidut turva-alueet, toistuvat torjunnat, 9→10-määrämuutos, ensimmäinen tapahtuma, kumoaminen, kellon käynnistys ja pysäytys, pitkät joukkueiden nimet, maalivahtivalinta sekä maalin tallennus ja paluu jäähyvalinnasta. Fyysistä iPhonea ei testattu.
 
 ### Päivitys 0.8.0: torjunta yhdellä painalluksella ja joukkuevärit
 

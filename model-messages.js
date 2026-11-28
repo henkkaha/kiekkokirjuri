@@ -1,4 +1,4 @@
-import { createTranslator } from './i18n.js?v=0.8.0';
+import { createTranslator } from './i18n.js?v=0.8.1';
 
 export const MODEL_MESSAGES = {
   'Valitse joukkueen väri.': {en:'Choose the team color.',sv:'Välj lagets färg.'},

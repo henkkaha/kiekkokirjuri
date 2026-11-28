@@ -1,7 +1,7 @@
-import { modelText } from './model-messages.js?v=0.8.0';
+import { modelText } from './model-messages.js?v=0.8.1';
 
 /** The storage shape deliberately stays compatible with ke-match-v1 backups. */
-export const VERSION = '0.8.0';
+export const VERSION = '0.8.1';
 
 const DEFAULT_LENGTH = 20 * 60;
 const NEW_EVENT_TYPES = new Set(['Maali', 'Torjunta', 'Jäähy']);
